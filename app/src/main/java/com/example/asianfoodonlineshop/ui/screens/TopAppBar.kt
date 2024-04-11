@@ -3,6 +3,11 @@ package com.example.asianfoodonlineshop.ui.screens
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.wrapContentHeight
+import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.Badge
@@ -14,6 +19,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.painterResource
@@ -58,7 +64,8 @@ fun TopAppBarMenuLogoSearch(
                 Icon(
                     painter = painterResource(R.drawable.ic_logo),
                     tint = colorResource(id = R.color.orange),
-                    contentDescription = stringResource(R.string.logo)
+                    contentDescription = stringResource(R.string.logo),
+                    modifier = Modifier.height(dimensionResource(id = R.dimen.size_44))
                 )
             }
         },

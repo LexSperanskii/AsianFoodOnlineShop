@@ -30,8 +30,9 @@ fun SushiShopNavHost(
         composable(route = CatalogDestination.route) {
             CatalogScreen(
                 navigateToCartButton = { navController.navigate(CartDestination.route) },
+                navigateToProduct = {navController.navigate(ProductDestination.route)},
                 catalogProductScreenViewModel = catalogProductScreenViewModel
-            )
+                )
         }
         composable(route = ProductDestination.route) {
             ProductScreen(

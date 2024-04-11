@@ -9,6 +9,8 @@ import com.example.sushishop.R
 import com.example.asianfoodonlineshop.data.db.UsersRepository
 import com.example.asianfoodonlineshop.data.network.ProductsRepository
 import com.example.asianfoodonlineshop.model.CommodityItem
+import com.example.asianfoodonlineshop.model.db.CartEntity
+import com.example.asianfoodonlineshop.model.db.CartModel
 import com.example.asianfoodonlineshop.model.network.AttributesItemModel
 import com.example.asianfoodonlineshop.model.network.CategoriesItemModel
 import com.example.asianfoodonlineshop.model.network.ProductModel
@@ -29,6 +31,7 @@ sealed interface CatalogScreenNetworkUiState {
 data class CatalogScreenUiState(
     val listOfProductsOriginal: List<CommodityItem> = listOf(),
     val listOfProducts: List<CommodityItem> = listOf(),
+    val listOfProductsForAttributes: List<CommodityItem> = listOf(),
     val listOfCategories: List<CategoriesItemModel> = listOf(),
     val currentCategory : CategoriesItemModel = CategoriesItemModel(0,""),
     val listOfAttributes: List<AttributesItemModel> = listOf(),
@@ -137,7 +140,6 @@ class CatalogProductScreenViewModel(
                 _catalogScreenUiState.update {
                     it.copy(
                         listOfProductsOriginal = listOfProducts,
-                        listOfProducts = listOfProducts,
                         listOfCategories = listOfCategories,
                         currentCategory = listOfCategories.first(),
                         listOfAttributes = listOfAttributes
@@ -154,17 +156,7 @@ class CatalogProductScreenViewModel(
             }
         }
     }
-//    fun saveOrDeleteFromFavorites(commodityItem: CommodityItem){
-//        viewModelScope.launch {
-//            if (commodityItem.isFavourite){
-//                //Удаляем из БД
-//                usersRepository.deleteFromFavorites(commodityItem.productDescription.id)
-//            }else{
-//                // Записываем в БД
-//                usersRepository.insertInFavorite(commodityItem.productDescription.id)
-//            }
-//        }
-//    }
+
     fun chooseCommodityItem(item: CommodityItem) {
         _productScreenUiState.update {
             it.copy(
@@ -172,18 +164,34 @@ class CatalogProductScreenViewModel(
             )
         }
     }
-    fun onAttributeItemClick(attributes: AttributesItemModel){
-        val listOfChosenAttributes = catalogScreenUiState.value.listOfChosenAttributes
-        val listOfNewChosenAttributes = mutableListOf<AttributesItemModel>()
-        listOfNewChosenAttributes.addAll(listOfChosenAttributes)
-        listOfNewChosenAttributes.add(attributes)
-        _catalogScreenUiState.update {
-            it.copy(
-                listOfChosenAttributes = listOfNewChosenAttributes
-            )
+    fun increaseQuantity(commodityItem: CommodityItem) {
+        viewModelScope.launch {
+            usersRepository.insertToCart(commodityItem.copy(quantity = commodityItem.quantity +1 ).toCartModel())
         }
-        sortAttributesItems(listOfNewChosenAttributes)
     }
+    fun decreaseQuantity(commodityItem: CommodityItem) {
+        viewModelScope.launch {
+            if (commodityItem.quantity == 1){
+                usersRepository.deleteFromCart(commodityItem.productItem.id)
+            }else{
+                usersRepository.insertToCart(commodityItem.copy(quantity = commodityItem.quantity -1 ).toCartModel())
+            }
+        }
+    }
+
+
+//    fun onAttributeItemClick(attributes: AttributesItemModel){
+//        val listOfChosenAttributes = catalogScreenUiState.value.listOfChosenAttributes
+//        val listOfNewChosenAttributes = mutableListOf<AttributesItemModel>()
+//        listOfNewChosenAttributes.addAll(listOfChosenAttributes)
+//        listOfNewChosenAttributes.add(attributes)
+//        _catalogScreenUiState.update {
+//            it.copy(
+//                listOfChosenAttributes = listOfNewChosenAttributes
+//            )
+//        }
+//        sortAttributesItems(listOfNewChosenAttributes)
+//    }
     fun onCategoryClick(category: CategoriesItemModel){
         _catalogScreenUiState.update {
             it.copy(
@@ -196,7 +204,8 @@ class CatalogProductScreenViewModel(
         val currentState = catalogScreenUiState.value
         _catalogScreenUiState.update { it ->
             it.copy(
-                listOfProducts = it.listOfProductsOriginal.filter { it.productItem.categoryId == category.id }
+                listOfProducts = it.listOfProductsOriginal.filter { it.productItem.categoryId == category.id },
+                listOfProductsForAttributes = it.listOfProductsOriginal.filter { it.productItem.categoryId == category.id }
             )
         }
         sortAttributesItems(currentState.listOfChosenAttributes)
@@ -204,7 +213,7 @@ class CatalogProductScreenViewModel(
     private fun sortAttributesItems(sortType: List<AttributesItemModel>) {
         _catalogScreenUiState.update { it ->
             it.copy(
-                listOfProducts = it.listOfProducts.filter { productItem ->
+                listOfProducts = it.listOfProductsForAttributes.filter { productItem ->
                     // Проверяем, что все элементы из sortType содержатся в productItem.tagIds
                     sortType.all { attributeItem ->
                         productItem.productItem.tagIds.contains(attributeItem.id)
@@ -213,4 +222,8 @@ class CatalogProductScreenViewModel(
             )
         }
     }
+}
+
+private fun CommodityItem.toCartModel(): CartModel {
+    return CartModel(productItem.id, productItem.name, productItem.priceCurrent, productItem.priceOld, image, quantity)
 }

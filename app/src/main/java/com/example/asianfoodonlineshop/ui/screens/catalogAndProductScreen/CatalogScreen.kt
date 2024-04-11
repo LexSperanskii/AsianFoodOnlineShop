@@ -51,7 +51,9 @@ import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.sp
 import com.example.sushishop.R
 import com.example.asianfoodonlineshop.model.CommodityItem
@@ -63,6 +65,7 @@ import com.example.asianfoodonlineshop.ui.screens.TopAppBarMenuLogoSearch
 @Composable
 fun CatalogScreen(
     navigateToCartButton: () -> Unit,
+    navigateToProduct: () -> Unit,
     catalogProductScreenViewModel: CatalogProductScreenViewModel,
     modifier: Modifier = Modifier
 ) {
@@ -75,7 +78,7 @@ fun CatalogScreen(
         topBar = {
             TopAppBarMenuLogoSearch(
                 onClickMenu = {
-                    showBottomSheet = !showBottomSheet
+                    showBottomSheet = true
                 },
                 onCLickSearch = {},
                 tagsCount = catalogScreenUiState.listOfChosenAttributes.size.toString()
@@ -99,17 +102,27 @@ fun CatalogScreen(
                 is CatalogScreenNetworkUiState.Success ->
                     CommodityItemsGridScreen(
                         productItems = catalogScreenUiState.listOfProducts,
-                        onCardClick = {},
-                        onAddToCartButtonClick = {},
-                        onIncreaseQuantityClick = {},
-                        onDecreaseQuantityClick = {},
+                        onCardClick = {
+                            catalogProductScreenViewModel.chooseCommodityItem(it)
+                            navigateToProduct()
+                        },
+                        onAddToCartButtonClick = {
+                            catalogProductScreenViewModel.increaseQuantity(it)
+                        },
+                        onIncreaseQuantityClick = {
+                            catalogProductScreenViewModel.increaseQuantity(it)
+                        },
+                        onDecreaseQuantityClick = {
+                            catalogProductScreenViewModel.decreaseQuantity(it)
+                        },
+
                         price = catalogScreenUiState.price ,
-                        navigateToCartButton = navigateToCartButton,
+                        navigateToCartButton = {navigateToCartButton()},
                         isShowBottomSheet = showBottomSheet,
                         onDismissRequestClick = { showBottomSheet = false },
                         listOfAttributes = catalogScreenUiState.listOfAttributes,
                         listOfChosenAttributes = catalogScreenUiState.listOfChosenAttributes,
-                        onCheckedChange = {},
+                        onCheckedChangeClick = {it},
                         onButtonTagsClick = {},
                         modifier = Modifier.fillMaxSize()
                     )
@@ -157,17 +170,17 @@ fun CommodityElement(
     commodityItem: CommodityItem,
     onCardClick: () -> Unit,
     onSale: Boolean,
-    modifier: Modifier = Modifier,
     onAddToCartButtonClick: () -> Unit,
     onIncreaseQuantityClick: () -> Unit,
-    onDecreaseQuantityClick: () -> Unit
-) {
+    onDecreaseQuantityClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    ) {
     Card(
         modifier = modifier
-            .height(dimensionResource(R.dimen.size_290))
-            .width(dimensionResource(R.dimen.size_168))
+            .clickable(onClick = onCardClick)
             .padding(dimensionResource(R.dimen.size_4))
-            .clickable(onClick = onCardClick),
+            .height(dimensionResource(R.dimen.size_290))
+            .width(dimensionResource(R.dimen.size_168)),
         shape = MaterialTheme.shapes.small,
         colors = CardDefaults.cardColors(colorResource(id = R.color.gray))
     ) {
@@ -179,10 +192,12 @@ fun CommodityElement(
             ) {
                 Box(modifier = Modifier.fillMaxSize()) {
                     if (onSale){
-                        Icon(
+                        Image(
                             painter = painterResource(id = R.drawable.ic_sale_tag),
                             contentDescription = stringResource(R.string.reduced),
-                            modifier = Modifier.size(dimensionResource(R.dimen.size_24))
+                            modifier = Modifier
+                                .padding(dimensionResource(id = R.dimen.size_8))
+                                .size(dimensionResource(R.dimen.size_24))
                         )
                     }
                     Image(
@@ -193,28 +208,34 @@ fun CommodityElement(
                     )
                 }
             }
-            Column(modifier = Modifier.weight(1f)) {
+            Column(modifier = Modifier
+                .padding(dimensionResource(id = R.dimen.size_12))
+                .fillMaxSize()
+            ) {
                 Text(
                     text = commodityItem.productItem.name,
                     style = TextStyle(
                         fontSize = dimensionResource(id = R.dimen.text_size_14).value.sp,
                         color = colorResource(id = R.color.black),
-                    )
+                    ),
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.padding(bottom = dimensionResource(id = R.dimen.size_4))
                 )
                 Text(
                     text = stringResource(id = R.string.measure, commodityItem.productItem.measure, commodityItem.productItem.measureUnit),
                     style = TextStyle(
                         fontSize = dimensionResource(id = R.dimen.text_size_14).value.sp,
                         color = colorResource(id = R.color.dark_gray),
-                    ),
-                    modifier = Modifier
+                    )
                 )
-                if (commodityItem.quantity == 0){
+                Spacer(modifier = Modifier.weight(1f))
+                if (commodityItem.quantity == 0) {
                     PriceButtonDefault(
                         commodityItem = commodityItem,
                         onAddToCartButtonClick = onAddToCartButtonClick
                     )
-                }else{
+                } else {
                     PriceButtonForQuantity(
                         commodityItem = commodityItem,
                         onIncreaseQuantityClick = onIncreaseQuantityClick,
@@ -230,16 +251,16 @@ fun CommodityElement(
 fun CommodityItemsGridScreen(
     productItems : List<CommodityItem>,
     onCardClick: (CommodityItem) -> Unit,
-    onAddToCartButtonClick: () -> Unit,
-    onIncreaseQuantityClick: () -> Unit,
-    onDecreaseQuantityClick: () -> Unit,
+    onAddToCartButtonClick: (CommodityItem) -> Unit,
+    onIncreaseQuantityClick: (CommodityItem) -> Unit,
+    onDecreaseQuantityClick: (CommodityItem) -> Unit,
     price: Int,
     navigateToCartButton: () -> Unit,
     isShowBottomSheet: Boolean,
     onDismissRequestClick: () -> Unit,
     listOfAttributes: List<AttributesItemModel>,
     listOfChosenAttributes: List<AttributesItemModel>,
-    onCheckedChange: (Boolean)->Unit,
+    onCheckedChangeClick: (AttributesItemModel)->Unit,
     onButtonTagsClick: () -> Unit,
     modifier: Modifier = Modifier,
     ) {
@@ -253,9 +274,9 @@ fun CommodityItemsGridScreen(
                 commodityItem = item,
                 onCardClick = { onCardClick(item) },
                 onSale = item.productItem.priceOld != null,
-                onAddToCartButtonClick = onAddToCartButtonClick,
-                onIncreaseQuantityClick = onIncreaseQuantityClick,
-                onDecreaseQuantityClick = onDecreaseQuantityClick
+                onAddToCartButtonClick = {onAddToCartButtonClick(item)},
+                onIncreaseQuantityClick = {onIncreaseQuantityClick(item)},
+                onDecreaseQuantityClick = {onDecreaseQuantityClick(item)}
             )
         }
     }
@@ -270,7 +291,7 @@ fun CommodityItemsGridScreen(
         onDismissRequestClick = onDismissRequestClick,
         listOfAttributes = listOfAttributes,
         listOfChosenAttributes = listOfChosenAttributes,
-        onCheckedChangeClick = onCheckedChange,
+        onCheckedChangeClick = onCheckedChangeClick,
         onButtonTagsClick = onButtonTagsClick,
     )
 }
@@ -331,29 +352,38 @@ fun TagsBottomSheet(
     onDismissRequestClick: () -> Unit,
     listOfAttributes: List<AttributesItemModel>,
     listOfChosenAttributes: List<AttributesItemModel>,
-    onCheckedChangeClick: (Boolean)->Unit,
+    onCheckedChangeClick: (AttributesItemModel)->Unit,
     onButtonTagsClick: () -> Unit,
 ) {
     if (isShowBottomSheet){
         ModalBottomSheet(
             sheetState = rememberModalBottomSheetState(),
+            shape = MaterialTheme.shapes.large,
             onDismissRequest = onDismissRequestClick,
-            dragHandle = {}
+            containerColor = colorResource(id = R.color.white),
+            dragHandle = {}//показывает значек чтобы тянуть за него
         ) {
-            Column {
+            Column(
+                modifier = Modifier.padding(
+                    vertical =  dimensionResource(id = R.dimen.size_32),
+                    horizontal = dimensionResource(id = R.dimen.size_24)
+                )
+            ) {
                 Text(
                     text = stringResource(id = R.string.choose_tags),
                     style = TextStyle(
+                        fontWeight = FontWeight.Bold,
                         fontSize = dimensionResource(id = R.dimen.text_size_20).value.sp,
                         color = colorResource(id = R.color.black),
-                    )
+                    ),
+                    modifier = Modifier.padding(bottom = dimensionResource(id = R.dimen.size_16))
                 )
                 LazyColumn() {
                     items(items = listOfAttributes) { item ->
                         TagCheckBox(
                             text = item.name,
                             isChecked = listOfChosenAttributes.contains(item),
-                            onCheckedChangeClick = onCheckedChangeClick
+                            onCheckedChangeClick = {onCheckedChangeClick(item)}
                         )
                     }
                 }
@@ -364,6 +394,7 @@ fun TagsBottomSheet(
                         containerColor = colorResource(id = R.color.orange)
                     ),
                     modifier = Modifier
+                        .align(Alignment.CenterHorizontally)
                         .height(dimensionResource(R.dimen.size_48))
                         .width(dimensionResource(R.dimen.size_327))
 
@@ -386,10 +417,10 @@ fun TagsBottomSheet(
 fun TagCheckBox(
     text: String,
     isChecked:Boolean,
-    onCheckedChangeClick: (Boolean)->Unit
+    onCheckedChangeClick: ()->Unit
 ) {
     Column {
-        Row {
+        Row(verticalAlignment = Alignment.CenterVertically) {
             Text(
                 text = text,
                 style = TextStyle(
@@ -400,7 +431,7 @@ fun TagCheckBox(
             Spacer(modifier = Modifier.weight(1f))
             Checkbox(
                 checked = isChecked,
-                onCheckedChange = {onCheckedChangeClick(it)}
+                onCheckedChange = {onCheckedChangeClick()}
             )
         }
         HorizontalDivider(modifier = Modifier.padding(all = dimensionResource(id = R.dimen.size_6)))
@@ -412,47 +443,47 @@ fun PriceButtonDefault(
     onAddToCartButtonClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    Column(modifier = modifier) {
-        Box(
-            contentAlignment = Alignment.Center ,
-            modifier = Modifier
-                .clip(MaterialTheme.shapes.small)
-                .background(colorResource(id = R.color.white))
-                .height(dimensionResource(R.dimen.size_40))
-                .fillMaxWidth()
-                .clickable { onAddToCartButtonClick() }
-        ){
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.padding(horizontal = dimensionResource(R.dimen.size_16))
-            ) {
-                if(commodityItem.productItem.priceOld == null){
-                    Text(
-                        text = stringResource(R.string.price, commodityItem.productItem.priceCurrent),
-                        style = TextStyle(
-                            fontSize = dimensionResource(id = R.dimen.text_size_16).value.sp,
-                            color = colorResource(id = R.color.black),
-                        )
+    Box(
+        contentAlignment = Alignment.Center ,
+        modifier = modifier
+            .clickable { onAddToCartButtonClick() }
+            .clip(MaterialTheme.shapes.small)
+            .background(colorResource(id = R.color.white))
+            .fillMaxWidth()
+            .height(dimensionResource(R.dimen.size_40))
+    ){
+        Row(
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            if(commodityItem.productItem.priceOld == null){
+                Text(
+                    text = stringResource(R.string.price, priceFormat(commodityItem.productItem.priceCurrent)),
+                    style = TextStyle(
+                        fontWeight = FontWeight.Bold,
+                        fontSize = dimensionResource(id = R.dimen.text_size_16).value.sp,
+                        color = colorResource(id = R.color.black),
                     )
-                }
-                else{
-                    Text(
-                        text = stringResource(R.string.price, commodityItem.productItem.priceCurrent),
-                        style = TextStyle(
-                            fontSize = dimensionResource(id = R.dimen.text_size_16).value.sp,
-                            color = colorResource(id = R.color.black),
-                        )
-                    )
-                    Text(
-                        text = stringResource(R.string.price, commodityItem.productItem.priceOld),
-                        style = TextStyle(
-                            fontSize = dimensionResource(id = R.dimen.text_size_16).value.sp,
-                            color = colorResource(id = R.color.dark_gray),
-                            textDecoration = TextDecoration.LineThrough
+                )
+            }
+            else{
+                Text(
+                    text = stringResource(R.string.price, priceFormat(commodityItem.productItem.priceCurrent)),
+                    style = TextStyle(
+                        fontWeight = FontWeight.Bold,
+                        fontSize = dimensionResource(id = R.dimen.text_size_16).value.sp,
+                        color = colorResource(id = R.color.black),
+                    ),
+                    modifier = Modifier.padding(end = dimensionResource(id = R.dimen.size_8))
+                )
+                Text(
+                    text = stringResource(R.string.price, priceFormat(commodityItem.productItem.priceOld)),
+                    style = TextStyle(
+                        fontSize = dimensionResource(id = R.dimen.text_size_14).value.sp,
+                        color = colorResource(id = R.color.dark_gray),
+                        textDecoration = TextDecoration.LineThrough
 
-                        )
                     )
-                }
+                )
             }
         }
     }
@@ -464,60 +495,47 @@ fun PriceButtonForQuantity(
     onDecreaseQuantityClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    Column(modifier = modifier) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = modifier
+    ) {
         Box(
             contentAlignment = Alignment.Center ,
             modifier = Modifier
                 .clip(MaterialTheme.shapes.small)
                 .background(colorResource(id = R.color.white))
-                .height(dimensionResource(R.dimen.size_40))
-                .fillMaxWidth()
+                .size(dimensionResource(R.dimen.size_40))
+                .clickable { onDecreaseQuantityClick() }
         ){
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.padding(horizontal = dimensionResource(R.dimen.size_16))
-            ) {
-                Box(
-                    contentAlignment = Alignment.Center ,
-                    modifier = Modifier
-                        .clip(MaterialTheme.shapes.small)
-                        .background(colorResource(id = R.color.white))
-                        .size(dimensionResource(R.dimen.size_40))
-                        .clickable { onIncreaseQuantityClick() }
-                ){
-                    Icon(
-                        painter = painterResource(id = R.drawable.ic_minus) ,
-                        contentDescription = stringResource(id = R.string.add_to_cart),
-                        tint = colorResource(id = R.color.orange),
-                        modifier = Modifier
-                            .width(dimensionResource(R.dimen.size_16))
-                            .height(dimensionResource(R.dimen.size_2))
-                    )
-                }
-                Text(
-                    text = commodityItem.quantity.toString(),
-                    style = TextStyle(
-                        fontSize = dimensionResource(id = R.dimen.text_size_16).value.sp,
-                        color = colorResource(id = R.color.black),
-                    )
-                )
-                Box(
-                    contentAlignment = Alignment.Center ,
-                    modifier = Modifier
-                        .clip(MaterialTheme.shapes.small)
-                        .background(colorResource(id = R.color.white))
-                        .size(dimensionResource(R.dimen.size_40))
-                        .clickable { onDecreaseQuantityClick() }
-                ){
-                    Icon(
-                        painter = painterResource(id = R.drawable.ic_plus) ,
-                        contentDescription = stringResource(id = R.string.add_to_cart),
-                        tint = colorResource(id = R.color.orange),
-                        modifier = Modifier
-                            .size(dimensionResource(R.dimen.size_16))
-                    )
-                }
-            }
+            Icon(
+                painter = painterResource(id = R.drawable.ic_minus) ,
+                contentDescription = stringResource(id = R.string.add_to_cart),
+                tint = colorResource(id = R.color.orange)
+            )
+        }
+        Spacer(modifier = Modifier.weight(1f))
+        Text(
+            text = commodityItem.quantity.toString(),
+            style = TextStyle(
+                fontWeight = FontWeight.Bold,
+                fontSize = dimensionResource(id = R.dimen.text_size_16).value.sp,
+                color = colorResource(id = R.color.black),
+            )
+        )
+        Spacer(modifier = Modifier.weight(1f))
+        Box(
+            contentAlignment = Alignment.Center ,
+            modifier = Modifier
+                .clip(MaterialTheme.shapes.small)
+                .background(colorResource(id = R.color.white))
+                .size(dimensionResource(R.dimen.size_40))
+                .clickable { onIncreaseQuantityClick() }
+        ){
+            Icon(
+                painter = painterResource(id = R.drawable.ic_plus) ,
+                contentDescription = stringResource(id = R.string.add_to_cart),
+                tint = colorResource(id = R.color.orange)
+            )
         }
     }
 }
@@ -560,3 +578,11 @@ fun NavigateToCartButton(
     }
 }
 
+fun priceFormat(price: Int): String {
+    val priceDouble = price.toDouble()
+    val newPrice = priceDouble / 100
+    return if (newPrice % 1 == 0.00)
+        String.format("%.0f", newPrice)
+    else
+        newPrice.toString()
+}
