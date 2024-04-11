@@ -15,8 +15,8 @@ interface UserDao {
     suspend fun deleteFromCart(id: Int)
     @Query("SELECT * FROM cart")
     fun getAllCartItems(): Flow<List<CartEntity>>
-//    @Query("SELECT * FROM cart WHERE id=:id")
-//    suspend fun getUser(id: Int) : CartEntity
+    @Query("SELECT * FROM cart WHERE id=:id")
+    suspend fun getItem(id: Int) : CartEntity?
     @Query("DELETE FROM cart")
     suspend fun deleteAllCartItems()
 }

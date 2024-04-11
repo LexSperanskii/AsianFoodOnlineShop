@@ -8,18 +8,18 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material3.Button
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -35,7 +35,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.sp
-import com.example.sushishop.R
+import com.example.asianfoodonlineshop.R
 import com.example.asianfoodonlineshop.model.CommodityItem
 
 @Composable
@@ -49,12 +49,22 @@ fun ProductScreen(
 
     Scaffold(
         topBar = {},
-        bottomBar = {}
+        bottomBar = {
+            AddToCartProductScreenButton(
+                quantity = productScreenUiState.commodityItem.quantity,
+                price = priceFormat(productScreenUiState.commodityItem.productItem.priceCurrent),
+                addToCartButton = {catalogProductScreenViewModel.addToCartFromProductScreen(productScreenUiState.commodityItem)},
+                navigateToCartButton = navigateToCartButton
+            )
+        }
     ) { innerPadding ->
-        Column(modifier = modifier.padding(innerPadding)) {
+        Column(
+            modifier = modifier
+                .fillMaxSize()
+                .padding(innerPadding)
+        ) {
             ProductScreenBody(
                 commodityItem = productScreenUiState.commodityItem,
-                navigateToCartButton = navigateToCartButton,
                 navigateToCatalogButton = navigateToCatalogButton
             )
         }
@@ -64,40 +74,42 @@ fun ProductScreen(
 @Composable
 fun ProductScreenBody(
     commodityItem : CommodityItem,
-    navigateToCartButton: () -> Unit,
     navigateToCatalogButton: () -> Unit,
     modifier: Modifier = Modifier
 ){
     Column(
         modifier = modifier
             .fillMaxSize()
-            .padding(
-                top = dimensionResource(R.dimen.size_16),
-                start = dimensionResource(R.dimen.size_16),
-                end = dimensionResource(R.dimen.size_16),
-                bottom = dimensionResource(R.dimen.size_8)
-            )
     ) {
-        Box(modifier = Modifier.fillMaxSize()) {
-            Button(
-                onClick = navigateToCatalogButton,
-                modifier = Modifier.size(dimensionResource(id = R.dimen.size_44))
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            modifier = Modifier.wrapContentHeight()
+        ) {
+            Box(
+                modifier = Modifier
+                    .background(colorResource(id = R.color.white))
+                    .aspectRatio(1f)
             ) {
-                Icon(
-                    Icons.Filled.ArrowBack,
-                    contentDescription = stringResource(id = R.string.catalog),
-                    tint = colorResource(id = R.color.white)
+                IconButton(
+                    onClick = navigateToCatalogButton,
+                    modifier = Modifier.padding(dimensionResource(id = R.dimen.size_16))
+                ) {
+                    Icon(
+                        painter = painterResource(id = R.drawable.ic_arrow_back),
+                        contentDescription = stringResource(id = R.string.catalog),
+                        modifier = Modifier.size(dimensionResource(id = R.dimen.size_24))
+                    )
+                }
+                Image(
+                    painter = painterResource(id = commodityItem.image),
+                    contentDescription = stringResource(R.string.product_image),
+                    modifier = Modifier.fillMaxSize(),
+                    contentScale = ContentScale.Fit
                 )
             }
-            Image(
-                painter = painterResource(id = commodityItem.image),
-                contentDescription = stringResource(R.string.product_image),
-                modifier = Modifier.fillMaxSize(),
-                contentScale = ContentScale.Fit
-            )
         }
         Column(
-            modifier = modifier
+            modifier = Modifier
                 .fillMaxSize()
                 .verticalScroll(enabled = true, state = rememberScrollState())
         ) {
@@ -106,6 +118,12 @@ fun ProductScreenBody(
                 style = TextStyle(
                     fontSize = dimensionResource(id = R.dimen.text_size_34).value.sp,
                     color = colorResource(id = R.color.black),
+                ),
+                modifier = Modifier.padding(
+                    top = dimensionResource(id = R.dimen.size_24),
+                    start = dimensionResource(id = R.dimen.size_16),
+                    end = dimensionResource(id = R.dimen.size_16),
+                    bottom =dimensionResource(id = R.dimen.size_8)
                 )
             )
             Text(
@@ -113,6 +131,11 @@ fun ProductScreenBody(
                 style = TextStyle(
                     fontSize = dimensionResource(id = R.dimen.text_size_16).value.sp,
                     color = colorResource(id = R.color.dark_gray),
+                ),
+                modifier = Modifier.padding(
+                    start = dimensionResource(id = R.dimen.size_16),
+                    end = dimensionResource(id = R.dimen.size_16),
+                    bottom =dimensionResource(id = R.dimen.size_24)
                 )
             )
             CompoundInfo(
@@ -121,26 +144,25 @@ fun ProductScreenBody(
             )
             CompoundInfo(
                 title = stringResource(id = R.string.energy_value),
-                description = stringResource(id = R.string.energy_value_measure, commodityItem.productItem.energyPer100Grams)
+                description = stringResource(id = R.string.energy_value_measure, measureFormat(commodityItem.productItem.energyPer100Grams))
             )
             CompoundInfo(
                 title = stringResource(id = R.string.protein),
-                description = stringResource(id = R.string.measure, commodityItem.productItem.proteinsPer100Grams, commodityItem.productItem.measureUnit )
+                description = stringResource(id = R.string.measure_for_double, measureFormat(commodityItem.productItem.proteinsPer100Grams), commodityItem.productItem.measureUnit )
             )
             CompoundInfo(
                 title = stringResource(id = R.string.fats),
-                description = stringResource(id = R.string.measure, commodityItem.productItem.fatsPer100Grams, commodityItem.productItem.measureUnit )
+                description = stringResource(id = R.string.measure_for_double, measureFormat(commodityItem.productItem.fatsPer100Grams), commodityItem.productItem.measureUnit )
             )
             CompoundInfo(
                 title = stringResource(id = R.string.carbs),
-                description = stringResource(id = R.string.measure, commodityItem.productItem.carbohydratesPer100Grams, commodityItem.productItem.measureUnit )
+                description = stringResource(id = R.string.measure_for_double, measureFormat(commodityItem.productItem.carbohydratesPer100Grams), commodityItem.productItem.measureUnit )
             )
-            HorizontalDivider(thickness = dimensionResource(id = R.dimen.size_6))
+            HorizontalDivider(
+                color = colorResource(id = R.color.dark_gray),
+                thickness = dimensionResource(R.dimen.size_1)
+            )
         }
-        AddToCartProductScreenButton(
-            price = commodityItem.productItem.priceCurrent,
-            navigateToCartButton = navigateToCartButton
-        )
     }
 }
 
@@ -156,49 +178,62 @@ fun CompoundInfo(
             .fillMaxWidth()
             .height(dimensionResource(R.dimen.size_50))
     ) {
-        HorizontalDivider(
-            color = colorResource(id = R.color.dark_gray),
-            thickness = dimensionResource(R.dimen.size_1),
-            modifier = Modifier
-        )
-        Text(
-            text = title,
-            style = TextStyle(
-                fontSize = dimensionResource(id = R.dimen.text_size_16).value.sp,
+        Column() {
+            HorizontalDivider(
                 color = colorResource(id = R.color.dark_gray),
+                thickness = dimensionResource(R.dimen.size_1)
             )
-        )
-        Spacer(modifier = Modifier.weight(1f))
-        Text(
-            text = description,
-            style = TextStyle(
-                fontSize = dimensionResource(id = R.dimen.text_size_16).value.sp,
-                color = colorResource(id = R.color.black),
-            )
-        )
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(
+                        horizontal = dimensionResource(id = R.dimen.size_16),
+                        vertical = dimensionResource(id = R.dimen.size_13),
+                    )
+            ) {
+                Text(
+                    text = title,
+                    style = TextStyle(
+                        fontSize = dimensionResource(id = R.dimen.text_size_16).value.sp,
+                        color = colorResource(id = R.color.dark_gray),
+                    )
+                )
+                Spacer(modifier = Modifier.weight(1f))
+                Text(
+                    text = description,
+                    style = TextStyle(
+                        fontSize = dimensionResource(id = R.dimen.text_size_16).value.sp,
+                        color = colorResource(id = R.color.black),
+                    )
+                )
+            }
+        }
     }
 }
 
 @Composable
 fun AddToCartProductScreenButton(
-    price: Int,
+    quantity:Int,
+    price: String,
     navigateToCartButton: () -> Unit,
+    addToCartButton: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    Column(modifier = modifier) {
-        Box(
-            contentAlignment = Alignment.Center ,
-            modifier = Modifier
-                .clip(MaterialTheme.shapes.small)
-                .background(colorResource(id = R.color.orange))
-                .height(dimensionResource(R.dimen.size_48))
-                .fillMaxWidth()
-                .clickable { navigateToCartButton() }
-        ){
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.padding(horizontal = dimensionResource(R.dimen.size_16))
-            ) {
+    Column(modifier = modifier.padding(
+        vertical = dimensionResource(id = R.dimen.size_12),
+        horizontal = dimensionResource(id = R.dimen.size_16)
+    )) {
+        if (quantity == 0){
+            Box(
+                contentAlignment = Alignment.Center ,
+                modifier = Modifier
+                    .clip(MaterialTheme.shapes.small)
+                    .background(colorResource(id = R.color.orange))
+                    .height(dimensionResource(R.dimen.size_48))
+                    .fillMaxWidth()
+                    .clickable { addToCartButton() }
+            ){
                 Text(
                     text = stringResource(R.string.add_to_cart_for, price),
                     style = TextStyle(
@@ -208,6 +243,32 @@ fun AddToCartProductScreenButton(
                     modifier = Modifier
                 )
             }
+        }else{
+            Box(
+                contentAlignment = Alignment.Center ,
+                modifier = Modifier
+                    .clip(MaterialTheme.shapes.small)
+                    .background(colorResource(id = R.color.orange))
+                    .height(dimensionResource(R.dimen.size_48))
+                    .fillMaxWidth()
+                    .clickable { navigateToCartButton() }
+            ){
+                Text(
+                    text = stringResource(R.string.navigate_to_cart_from_product, price),
+                    style = TextStyle(
+                        fontSize = dimensionResource(id = R.dimen.text_size_16).value.sp,
+                        color = colorResource(id = R.color.white),
+                    ),
+                    modifier = Modifier
+                )
+            }
         }
     }
+}
+
+fun measureFormat(price: Double): String {
+    return if (price % 1 == 0.00)
+        price.toInt().toString()
+    else
+       String.format("%.1f",price)
 }

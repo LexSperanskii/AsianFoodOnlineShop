@@ -5,11 +5,10 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.sushishop.R
+import com.example.asianfoodonlineshop.R
 import com.example.asianfoodonlineshop.data.db.UsersRepository
 import com.example.asianfoodonlineshop.data.network.ProductsRepository
 import com.example.asianfoodonlineshop.model.CommodityItem
-import com.example.asianfoodonlineshop.model.db.CartEntity
 import com.example.asianfoodonlineshop.model.db.CartModel
 import com.example.asianfoodonlineshop.model.network.AttributesItemModel
 import com.example.asianfoodonlineshop.model.network.CategoriesItemModel
@@ -17,6 +16,7 @@ import com.example.asianfoodonlineshop.model.network.ProductModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
@@ -101,21 +101,23 @@ class CatalogProductScreenViewModel(
      * State для выбранного товара
      */
     private val _productScreenUiState = MutableStateFlow(ProductScreenUiState())
-    val productScreenUiState: StateFlow<ProductScreenUiState> = _productScreenUiState
-        .combine(usersRepository.getAllCartItems()) { localState, cart ->
-            val cartItem = cart.find { it.id == localState.commodityItem.productItem.id }
-            if (cartItem != null) {
-                // Найден элемент в корзине с таким же id, устанавливаем quantity
-                localState.copy(commodityItem = localState.commodityItem.copy(quantity = cartItem.quantity) )
-            } else {
-                // Не найден элемент в корзине, оставляем quantity без изменений
-                localState
-            }
-        }.stateIn(
-            scope = viewModelScope,
-            started = SharingStarted.WhileSubscribed(5_000),
-            initialValue = ProductScreenUiState()
-        )
+    val productScreenUiState: StateFlow<ProductScreenUiState> = _productScreenUiState.asStateFlow()
+//    private val _productScreenUiState = MutableStateFlow(ProductScreenUiState())
+//    val productScreenUiState: StateFlow<ProductScreenUiState> = _productScreenUiState
+//        .combine(usersRepository.getAllCartItems()) { localState, cart ->
+//            val cartItem = cart.find { it.id == localState.commodityItem.productItem.id }
+//            if (cartItem != null) {
+//                // Найден элемент в корзине с таким же id, устанавливаем quantity
+//                localState.copy(commodityItem = localState.commodityItem.copy(quantity = cartItem.quantity) )
+//            } else {
+//                // Не найден элемент в корзине, оставляем quantity без изменений
+//                localState
+//            }
+//        }.stateIn(
+//            scope = viewModelScope,
+//            started = SharingStarted.WhileSubscribed(5_000),
+//            initialValue = ProductScreenUiState()
+//        )
 
     init {
         getCommodityItemsInfo()
@@ -157,10 +159,18 @@ class CatalogProductScreenViewModel(
         }
     }
 
-    fun chooseCommodityItem(item: CommodityItem) {
+    fun chooseCommodityItem(commodityItem: CommodityItem) {
         _productScreenUiState.update {
             it.copy(
-                commodityItem = item
+                commodityItem = commodityItem
+            )
+        }
+    }
+    fun addToCartFromProductScreen(commodityItem: CommodityItem){
+        increaseQuantity(commodityItem)
+        _productScreenUiState.update {
+            it.copy(
+                commodityItem = it.commodityItem.copy(quantity = 1)
             )
         }
     }
@@ -178,20 +188,29 @@ class CatalogProductScreenViewModel(
             }
         }
     }
-
-
-//    fun onAttributeItemClick(attributes: AttributesItemModel){
-//        val listOfChosenAttributes = catalogScreenUiState.value.listOfChosenAttributes
-//        val listOfNewChosenAttributes = mutableListOf<AttributesItemModel>()
-//        listOfNewChosenAttributes.addAll(listOfChosenAttributes)
-//        listOfNewChosenAttributes.add(attributes)
-//        _catalogScreenUiState.update {
-//            it.copy(
-//                listOfChosenAttributes = listOfNewChosenAttributes
-//            )
-//        }
-//        sortAttributesItems(listOfNewChosenAttributes)
-//    }
+    fun onAttributeItemClick(attribute: AttributesItemModel, isChecked: Boolean){
+        _catalogScreenUiState.update { currentState ->
+            if (isChecked){
+                // Добавить элемент к списку
+                val updatedList = currentState.listOfChosenAttributes.toMutableList().apply {
+                    add(attribute)
+                }
+                currentState.copy(
+                    listOfChosenAttributes = updatedList
+                )
+            }else{
+                // Удалить элемент из списка
+                val updatedList = currentState.listOfChosenAttributes.toMutableList().apply {
+                    remove(attribute)
+                }
+                currentState.copy(
+                    listOfChosenAttributes = updatedList
+                )
+            }
+        }
+        //Фильтруем
+        sortAttributesItems(catalogScreenUiState.value.listOfChosenAttributes)
+    }
     fun onCategoryClick(category: CategoriesItemModel){
         _catalogScreenUiState.update {
             it.copy(

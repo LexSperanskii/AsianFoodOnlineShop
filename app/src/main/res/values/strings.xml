@@ -15,16 +15,19 @@
     <string name="choose_tags">Choose dishes</string>
     <string name="apply">Apply</string>
     <string name="measure">%1$d %2$s</string>
+    <string name="measure_for_double">%1$s %2$s</string>
     <string name="price">%s ₽</string>
-    <string name="add_to_cart_for">Add to cart for %d ₽</string>
+    <string name="add_to_cart_for">Add to cart for %s ₽</string>
+    <string name="navigate_to_cart_from_product">Already in cart. Forward -></string>
     <string name="add_to_cart">Add to Cart</string>
-    <string name="place_order">Order at %d ₽</string>
+    <string name="place_order">Order at %s ₽</string>
     <string name="navigate_to_cart">Navigate to Cart</string>
     <string name="weight">Weight</string>
     <string name="energy_value">Energy value</string>
-    <string name="energy_value_measure">%d kcal</string>
+    <string name="energy_value_measure">%s kcal</string>
     <string name="protein">Protein</string>
     <string name="fats">Fats</string>
     <string name="carbs">Carbs</string>
     <string name="cart_stub">Empty, choose dishes in the catalog :)</string>
+    <string name="catalog_stub">Whoops, nothing fits :)</string>
 </resources>

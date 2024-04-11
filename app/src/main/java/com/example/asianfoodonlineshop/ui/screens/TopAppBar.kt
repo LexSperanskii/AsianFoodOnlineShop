@@ -6,8 +6,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.wrapContentHeight
-import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.Badge
@@ -19,16 +17,14 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.scale
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.semantics.contentDescription
-import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
-import com.example.sushishop.R
+import com.example.asianfoodonlineshop.R
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -51,7 +47,9 @@ fun TopAppBarMenuLogoSearch(
                 IconButton(onClick = onClickMenu) {
                     Icon(
                         painter = painterResource(id = R.drawable.ic_menu),
-                        contentDescription = stringResource(R.string.menu_button)
+                        contentDescription = stringResource(R.string.menu_button),
+                        tint = colorResource(id = R.color.black),
+                        modifier = Modifier.size(dimensionResource(id = R.dimen.size_24))
                     )
                 }
             }
@@ -73,7 +71,9 @@ fun TopAppBarMenuLogoSearch(
             IconButton(onClick = onCLickSearch) {
                 Icon(
                     painter = painterResource(id = R.drawable.ic_search),
-                    contentDescription = stringResource(R.string.menu_button)
+                    contentDescription = stringResource(R.string.menu_button),
+                    tint = colorResource(id = R.color.black),
+                    modifier = Modifier.size(dimensionResource(id = R.dimen.size_24))
                 )
             }
         },
@@ -94,9 +94,11 @@ fun TopAppBarBackAndName(
                 Text(
                     text = stringResource(id = currentDestinationTitle),
                     style = TextStyle(
+                        fontWeight = FontWeight.Bold,
                         fontSize = dimensionResource(id = R.dimen.text_size_18).value.sp,
                         color = colorResource(id = R.color.black),
-                    )
+                    ),
+                    modifier = Modifier.padding(start = dimensionResource(id = R.dimen.size_16))
                 )
             }
         },

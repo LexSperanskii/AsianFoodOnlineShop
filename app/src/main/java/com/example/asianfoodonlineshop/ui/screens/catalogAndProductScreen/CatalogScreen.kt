@@ -55,7 +55,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.sp
-import com.example.sushishop.R
+import com.example.asianfoodonlineshop.R
 import com.example.asianfoodonlineshop.model.CommodityItem
 import com.example.asianfoodonlineshop.model.network.AttributesItemModel
 import com.example.asianfoodonlineshop.model.network.CategoriesItemModel
@@ -83,6 +83,14 @@ fun CatalogScreen(
                 onCLickSearch = {},
                 tagsCount = catalogScreenUiState.listOfChosenAttributes.size.toString()
             )
+        },
+        bottomBar = {
+            if (catalogScreenUiState.price != 0){
+                NavigateToCartButton(
+                    price = priceFormat(catalogScreenUiState.price),
+                    navigateToCartButton = navigateToCartButton,
+                )
+            }
         }
     ) { innerPadding ->
         Column(
@@ -115,15 +123,14 @@ fun CatalogScreen(
                         onDecreaseQuantityClick = {
                             catalogProductScreenViewModel.decreaseQuantity(it)
                         },
-
-                        price = catalogScreenUiState.price ,
-                        navigateToCartButton = {navigateToCartButton()},
                         isShowBottomSheet = showBottomSheet,
                         onDismissRequestClick = { showBottomSheet = false },
                         listOfAttributes = catalogScreenUiState.listOfAttributes,
                         listOfChosenAttributes = catalogScreenUiState.listOfChosenAttributes,
-                        onCheckedChangeClick = {it},
-                        onButtonTagsClick = {},
+                        onCheckedChangeClick = { attribute, isChecked ->
+                            catalogProductScreenViewModel.onAttributeItemClick(attribute, isChecked)
+                        },
+                        onButtonTagsClick = { showBottomSheet = false },
                         modifier = Modifier.fillMaxSize()
                     )
                 is CatalogScreenNetworkUiState.Error ->
@@ -254,37 +261,41 @@ fun CommodityItemsGridScreen(
     onAddToCartButtonClick: (CommodityItem) -> Unit,
     onIncreaseQuantityClick: (CommodityItem) -> Unit,
     onDecreaseQuantityClick: (CommodityItem) -> Unit,
-    price: Int,
-    navigateToCartButton: () -> Unit,
     isShowBottomSheet: Boolean,
     onDismissRequestClick: () -> Unit,
     listOfAttributes: List<AttributesItemModel>,
     listOfChosenAttributes: List<AttributesItemModel>,
-    onCheckedChangeClick: (AttributesItemModel)->Unit,
+    onCheckedChangeClick: (AttributesItemModel, Boolean)->Unit,
     onButtonTagsClick: () -> Unit,
     modifier: Modifier = Modifier,
     ) {
-    LazyVerticalGrid(
-        columns = GridCells.Adaptive(dimensionResource(R.dimen.size_168)),
-        modifier = modifier.fillMaxWidth(),
-        contentPadding = PaddingValues(dimensionResource(R.dimen.size_12))
-    ) {
-        items(items = productItems) { item ->
-            CommodityElement(
-                commodityItem = item,
-                onCardClick = { onCardClick(item) },
-                onSale = item.productItem.priceOld != null,
-                onAddToCartButtonClick = {onAddToCartButtonClick(item)},
-                onIncreaseQuantityClick = {onIncreaseQuantityClick(item)},
-                onDecreaseQuantityClick = {onDecreaseQuantityClick(item)}
+    if (productItems.isEmpty()){
+        Box(
+            modifier = modifier
+                .fillMaxSize()
+        ) {
+            Text(
+                text = stringResource(id = R.string.catalog_stub),
+                modifier = Modifier.align(Alignment.Center)
             )
         }
-    }
-    if (price!=0){
-        NavigateToCartButton(
-            price = price,
-            navigateToCartButton = navigateToCartButton,
-        )
+    }else{
+        LazyVerticalGrid(
+            columns = GridCells.Adaptive(dimensionResource(R.dimen.size_168)),
+            modifier = modifier.fillMaxWidth(),
+            contentPadding = PaddingValues(dimensionResource(R.dimen.size_12))
+        ) {
+            items(items = productItems) { item ->
+                CommodityElement(
+                    commodityItem = item,
+                    onCardClick = { onCardClick(item) },
+                    onSale = item.productItem.priceOld != null,
+                    onAddToCartButtonClick = {onAddToCartButtonClick(item)},
+                    onIncreaseQuantityClick = {onIncreaseQuantityClick(item)},
+                    onDecreaseQuantityClick = {onDecreaseQuantityClick(item)}
+                )
+            }
+        }
     }
     TagsBottomSheet(
         isShowBottomSheet = isShowBottomSheet,
@@ -305,8 +316,10 @@ fun CategoryRow(
 ) {
     LazyRow(
         modifier = modifier,
-        horizontalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.size_6)),
-        contentPadding = PaddingValues(dimensionResource(R.dimen.size_16))
+        horizontalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.size_8)),
+        contentPadding = PaddingValues(
+            horizontal = dimensionResource(R.dimen.size_16)
+        )
     ) {
         items(items = listOfCategories) { category ->
             if (category == currentCategory){
@@ -352,7 +365,7 @@ fun TagsBottomSheet(
     onDismissRequestClick: () -> Unit,
     listOfAttributes: List<AttributesItemModel>,
     listOfChosenAttributes: List<AttributesItemModel>,
-    onCheckedChangeClick: (AttributesItemModel)->Unit,
+    onCheckedChangeClick: (AttributesItemModel,Boolean)->Unit,
     onButtonTagsClick: () -> Unit,
 ) {
     if (isShowBottomSheet){
@@ -379,11 +392,11 @@ fun TagsBottomSheet(
                     modifier = Modifier.padding(bottom = dimensionResource(id = R.dimen.size_16))
                 )
                 LazyColumn() {
-                    items(items = listOfAttributes) { item ->
+                    items(items = listOfAttributes) { attribute ->
                         TagCheckBox(
-                            text = item.name,
-                            isChecked = listOfChosenAttributes.contains(item),
-                            onCheckedChangeClick = {onCheckedChangeClick(item)}
+                            text = attribute.name,
+                            isChecked = listOfChosenAttributes.contains(attribute),
+                            onCheckedChangeClick = {onCheckedChangeClick(attribute,it)}
                         )
                     }
                 }
@@ -417,7 +430,7 @@ fun TagsBottomSheet(
 fun TagCheckBox(
     text: String,
     isChecked:Boolean,
-    onCheckedChangeClick: ()->Unit
+    onCheckedChangeClick: (Boolean) -> Unit
 ) {
     Column {
         Row(verticalAlignment = Alignment.CenterVertically) {
@@ -431,7 +444,7 @@ fun TagCheckBox(
             Spacer(modifier = Modifier.weight(1f))
             Checkbox(
                 checked = isChecked,
-                onCheckedChange = {onCheckedChangeClick()}
+                onCheckedChange = {onCheckedChangeClick(it)}
             )
         }
         HorizontalDivider(modifier = Modifier.padding(all = dimensionResource(id = R.dimen.size_6)))
@@ -541,11 +554,14 @@ fun PriceButtonForQuantity(
 }
 @Composable
 fun NavigateToCartButton(
-    price: Int,
+    price: String,
     navigateToCartButton: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    Column(modifier = modifier) {
+    Column(modifier = modifier.padding(
+        vertical = dimensionResource(id = R.dimen.size_12),
+        horizontal = dimensionResource(id = R.dimen.size_16)
+    )) {
         Box(
             contentAlignment = Alignment.Center ,
             modifier = Modifier
@@ -556,8 +572,7 @@ fun NavigateToCartButton(
                 .clickable { navigateToCartButton() }
         ){
             Row(
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.padding(horizontal = dimensionResource(R.dimen.size_16))
+                verticalAlignment = Alignment.CenterVertically
             ) {
                 Icon(
                     Icons.Filled.ShoppingCart,
@@ -571,7 +586,7 @@ fun NavigateToCartButton(
                         fontSize = dimensionResource(id = R.dimen.text_size_16).value.sp,
                         color = colorResource(id = R.color.white),
                     ),
-                    modifier = Modifier
+                    modifier = Modifier.padding(start = dimensionResource(id = R.dimen.size_8))
                 )
             }
         }
@@ -582,7 +597,7 @@ fun priceFormat(price: Int): String {
     val priceDouble = price.toDouble()
     val newPrice = priceDouble / 100
     return if (newPrice % 1 == 0.00)
-        String.format("%.0f", newPrice)
+        newPrice.toInt().toString()
     else
         newPrice.toString()
 }

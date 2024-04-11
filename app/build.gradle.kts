@@ -8,11 +8,11 @@ plugins {
 }
 
 android {
-    namespace = "com.example.sushishop"
+    namespace = "com.example.asianfoodonlineshop"
     compileSdk = 34
 
     defaultConfig {
-        applicationId = "com.example.sushishop"
+        applicationId = "com.example.asianfoodonlineshop"
         minSdk = 24
         targetSdk = 34
         versionCode = 1

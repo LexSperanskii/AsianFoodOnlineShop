@@ -1,6 +1,6 @@
 package com.example.asianfoodonlineshop.ui.navigation
 
-import com.example.sushishop.R
+import com.example.asianfoodonlineshop.R
 
 
 interface NavigationDestination {

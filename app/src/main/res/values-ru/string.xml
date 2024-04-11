@@ -16,16 +16,19 @@
     <string name="choose_tags">Подобрать блюда</string>
     <string name="apply">Готово</string>
     <string name="measure">%1$d %2$s</string>
+    <string name="measure_for_double">%1$s %2$s</string>
     <string name="price">%s ₽</string>
-    <string name="add_to_cart_for">Добавить в корзину за %d ₽</string>
+    <string name="add_to_cart_for">Добавить в корзину за %s ₽</string>
+    <string name="navigate_to_cart_from_product">Уже в корзине. Перейти -></string>
     <string name="add_to_cart">Добавить в Корзину</string>
-    <string name="place_order">Заказать на %d ₽</string>
+    <string name="place_order">Заказать на %s ₽</string>
     <string name="navigate_to_cart">Перейти в корзину</string>
     <string name="weight">Вес</string>
     <string name="energy_value">Енерг. ценность</string>
-    <string name="energy_value_measure">%d ккал</string>
+    <string name="energy_value_measure">%s ккал</string>
     <string name="protein">Белки</string>
     <string name="fats">Жиры</string>
     <string name="carbs">Углеводы</string>
     <string name="cart_stub">Пусто, выберите блюда в каталоге :)</string>
+    <string name="catalog_stub">Ууупс, ничего не подходит под выбранные критерии :)</string>
 </resources>
