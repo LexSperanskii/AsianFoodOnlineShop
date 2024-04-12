@@ -30,4 +30,5 @@
     <string name="carbs">Carbs</string>
     <string name="cart_stub">Empty, choose dishes in the catalog :)</string>
     <string name="catalog_stub">Whoops, nothing fits :)</string>
+    <string name="send_order">Well done! Your order has been sent :)</string>
 </resources>

@@ -1,5 +1,6 @@
 package com.example.asianfoodonlineshop.ui.screens.cartScreen
 
+import android.content.Context
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -8,32 +9,37 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.dimensionResource
+import androidx.compose.ui.res.integerResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.Font
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.sp
@@ -43,17 +49,25 @@ import com.example.asianfoodonlineshop.model.db.CartModel
 import com.example.asianfoodonlineshop.ui.AppViewModelProvider
 import com.example.asianfoodonlineshop.ui.screens.TopAppBarBackAndName
 import com.example.asianfoodonlineshop.ui.screens.catalogAndProductScreen.priceFormat
+import kotlinx.coroutines.launch
 
 @Composable
 fun CartScreen(
     currentDestinationTitle: Int,
     onClickNavigateBack: () -> Unit,
-    modifier: Modifier = Modifier,
+    navigateToProduct: () -> Unit,
     cartScreenViewModel: CartScreenViewModel = viewModel(factory = AppViewModelProvider.Factory)
 ) {
-    val cartScreenViewModel = cartScreenViewModel.cartScreenUiState.collectAsState().value
+    val cartUiState = cartScreenViewModel.cartScreenUiState.collectAsState().value
+    //Для вызова снекбара после нажатия оформить заказ
+    val scope = rememberCoroutineScope()
+    val snackbarHostState = remember { SnackbarHostState() }
+    val context = LocalContext.current
 
     Scaffold(
+        snackbarHost = {
+            SnackbarHost(hostState = snackbarHostState)
+        },
         topBar = {
             TopAppBarBackAndName(
                 currentDestinationTitle = currentDestinationTitle,
@@ -62,28 +76,36 @@ fun CartScreen(
         },
         bottomBar = {
             PlaceOrderButton(
-                price = cartScreenViewModel.price,
-                navigateToPlaceOrder = {}
+                price = cartUiState.price,
+                navigateToPlaceOrder = {
+                    scope.launch {
+                        snackbarHostState.showSnackbar(context.getString(R.string.send_order))
+                    }
+                }
             )
         }
     ) { innerPadding ->
-        if (cartScreenViewModel.cart.isEmpty()){
-            Box(
-                modifier = modifier
-                    .fillMaxSize()
-                    .padding(innerPadding)
-            ) {
-                Text(
-                    text = stringResource(id = R.string.cart_stub),
-                    modifier = Modifier.align(Alignment.Center)
+        Column(
+            modifier = Modifier.padding(innerPadding)
+        ) {
+            if (cartUiState.cart.isEmpty()){
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                ) {
+                    Text(
+                        text = stringResource(id = R.string.cart_stub),
+                        modifier = Modifier.align(Alignment.Center)
+                    )
+                }
+            }else{
+                CartScreenBody(
+                    cartItems = cartUiState.cart,
+                    onIncreaseQuantityClick = {cartScreenViewModel.increaseQuantity(it)},
+                    onDecreaseQuantityClick = {cartScreenViewModel.decreaseQuantity(it)},
+                    navigateToProduct = navigateToProduct
                 )
             }
-        }else{
-            CartScreenBody(
-                cartItems = cartScreenViewModel.cart,
-                onIncreaseQuantityClick = {},
-                onDecreaseQuantityClick = {}
-            )
         }
     }
 }
@@ -91,8 +113,9 @@ fun CartScreen(
 @Composable
 fun CartScreenBody(
     cartItems : List<CartModel>,
-    onIncreaseQuantityClick: () -> Unit,
-    onDecreaseQuantityClick: () -> Unit,
+    onIncreaseQuantityClick: (CartModel) -> Unit,
+    onDecreaseQuantityClick: (CartModel) -> Unit,
+    navigateToProduct: () -> Unit,
     modifier : Modifier = Modifier
 ){
     LazyColumn(
@@ -102,8 +125,9 @@ fun CartScreenBody(
         items(items = cartItems) { cartItem ->
             CartElement(
                 cartElement = cartItem,
-                onIncreaseQuantityClick = onIncreaseQuantityClick,
-                onDecreaseQuantityClick = onDecreaseQuantityClick,
+                onIncreaseQuantityClick = {onIncreaseQuantityClick(cartItem)},
+                onDecreaseQuantityClick = {onDecreaseQuantityClick(cartItem)},
+                navigateToProduct = navigateToProduct
             )
         }
     }
@@ -113,6 +137,7 @@ fun CartElement(
     cartElement: CartModel,
     onIncreaseQuantityClick: () -> Unit,
     onDecreaseQuantityClick: () -> Unit,
+    navigateToProduct: () -> Unit,
     modifier : Modifier = Modifier
 ){
     Column( modifier = modifier) {
@@ -120,6 +145,7 @@ fun CartElement(
             modifier = Modifier
                 .fillMaxWidth()
                 .height(dimensionResource(id = R.dimen.size_128))
+                .clickable { navigateToProduct() }
         ) {
             Image(
                 painter = painterResource(id = cartElement.image),
@@ -140,6 +166,8 @@ fun CartElement(
                 Text(
                     text = cartElement.name,
                     style = TextStyle(
+                        fontWeight = FontWeight(integerResource(id = R.integer.weight_400)),
+                        fontFamily = FontFamily(Font(R.font.roboto_regular)),
                         fontSize = dimensionResource(id = R.dimen.text_size_14).value.sp,
                         color = colorResource(id = R.color.black),
                     )
@@ -161,7 +189,8 @@ fun CartElement(
                             Text(
                                 text = stringResource(id = R.string.price, priceFormat(cartElement.priceCurrent)),
                                 style = TextStyle(
-                                    fontWeight = FontWeight.Bold,
+                                    fontWeight = FontWeight(integerResource(id = R.integer.weight_500)),
+                                    fontFamily = FontFamily(Font(R.font.roboto_medium)),
                                     fontSize = dimensionResource(id = R.dimen.text_size_16).value.sp,
                                     color = colorResource(id = R.color.black),
                                 ),
@@ -170,6 +199,8 @@ fun CartElement(
                             Text(
                                 text = stringResource(id = R.string.price, priceFormat(cartElement.priceOld)),
                                 style = TextStyle(
+                                    fontWeight = FontWeight(integerResource(id = R.integer.weight_400)),
+                                    fontFamily = FontFamily(Font(R.font.roboto_regular)),
                                     fontSize = dimensionResource(id = R.dimen.text_size_14).value.sp,
                                     color = colorResource(id = R.color.dark_gray),
                                 ),
@@ -180,7 +211,8 @@ fun CartElement(
                         Text(
                             text = stringResource(id = R.string.price, priceFormat(cartElement.priceCurrent)),
                             style = TextStyle(
-                                fontWeight = FontWeight.Bold,
+                                fontWeight = FontWeight(integerResource(id = R.integer.weight_500)),
+                                fontFamily = FontFamily(Font(R.font.roboto_medium)),
                                 fontSize = dimensionResource(id = R.dimen.text_size_16).value.sp,
                                 color = colorResource(id = R.color.black),
                             )
@@ -224,7 +256,8 @@ fun QuantityButtonForCart(
         Text(
             text = cartElement.quantity.toString(),
             style = TextStyle(
-                fontWeight = FontWeight.Bold,
+                fontWeight = FontWeight(integerResource(R.integer.weight_500)),
+                fontFamily = FontFamily(Font(R.font.roboto_medium)),
                 fontSize = dimensionResource(id = R.dimen.text_size_16).value.sp,
                 color = colorResource(id = R.color.black),
             ),

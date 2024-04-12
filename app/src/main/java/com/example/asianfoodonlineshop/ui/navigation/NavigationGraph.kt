@@ -44,7 +44,8 @@ fun SushiShopNavHost(
         composable(route = CartDestination.route) {
             CartScreen(
                 currentDestinationTitle = CartDestination.title,
-                onClickNavigateBack = { navController.popBackStack() }
+                onClickNavigateBack = {  navController.popBackStack(navController.graph.startDestinationId, false) },
+                navigateToProduct = { navController.navigate(ProductDestination.route)}
             )
         }
     }

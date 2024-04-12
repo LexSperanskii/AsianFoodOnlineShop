@@ -23,8 +23,7 @@ object AppViewModelProvider {
         }
         initializer {
             CartScreenViewModel(
-                usersRepository = onlineShopApplication().container.usersRepository,
-                productsRepository = onlineShopApplication().container.productsInfoRepository
+                usersRepository = onlineShopApplication().container.usersRepository
             )
         }
     }
