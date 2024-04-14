@@ -13,6 +13,7 @@ import com.example.asianfoodonlineshop.model.db.CartModel
 import com.example.asianfoodonlineshop.model.network.AttributesItemModel
 import com.example.asianfoodonlineshop.model.network.CategoriesItemModel
 import com.example.asianfoodonlineshop.model.network.ProductModel
+import com.example.asianfoodonlineshop.ui.screens.SharedViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -38,19 +39,12 @@ data class CatalogScreenUiState(
     val listOfChosenAttributes: List<AttributesItemModel> = listOf(),
     val price: Int = 0
 )
-data class ProductScreenUiState(
-    val commodityItem: CommodityItem = CommodityItem(
-        ProductModel(0.0,0,"",0.0,0.0,
-            0,"",0,"","",0,0,0.0, listOf()
-        ),
-        0,
-        0
-    )
-)
+
 
 class CatalogProductScreenViewModel(
     private val usersRepository: UsersRepository,
-    private val productsRepository: ProductsRepository
+    private val productsRepository: ProductsRepository,
+    private val sharedViewModel: SharedViewModel // Передача общего значения для id
 ) : ViewModel() {
 
     /**
@@ -97,28 +91,6 @@ class CatalogProductScreenViewModel(
             initialValue = CatalogScreenUiState()
         )
 
-    /**
-     * State для выбранного товара
-     */
-    private val _productScreenUiState = MutableStateFlow(ProductScreenUiState())
-    val productScreenUiState: StateFlow<ProductScreenUiState> = _productScreenUiState.asStateFlow()
-//    private val _productScreenUiState = MutableStateFlow(ProductScreenUiState())
-//    val productScreenUiState: StateFlow<ProductScreenUiState> = _productScreenUiState
-//        .combine(usersRepository.getAllCartItems()) { localState, cart ->
-//            val cartItem = cart.find { it.id == localState.commodityItem.productItem.id }
-//            if (cartItem != null) {
-//                // Найден элемент в корзине с таким же id, устанавливаем quantity
-//                localState.copy(commodityItem = localState.commodityItem.copy(quantity = cartItem.quantity) )
-//            } else {
-//                // Не найден элемент в корзине, оставляем quantity без изменений
-//                localState
-//            }
-//        }.stateIn(
-//            scope = viewModelScope,
-//            started = SharingStarted.WhileSubscribed(5_000),
-//            initialValue = ProductScreenUiState()
-//        )
-
     init {
         getCommodityItemsInfo()
     }
@@ -159,21 +131,6 @@ class CatalogProductScreenViewModel(
         }
     }
 
-    fun chooseCommodityItem(commodityItem: CommodityItem) {
-        _productScreenUiState.update {
-            it.copy(
-                commodityItem = commodityItem
-            )
-        }
-    }
-    fun addToCartFromProductScreen(commodityItem: CommodityItem){
-        increaseQuantity(commodityItem)
-        _productScreenUiState.update {
-            it.copy(
-                commodityItem = it.commodityItem.copy(quantity = 1)
-            )
-        }
-    }
     fun increaseQuantity(commodityItem: CommodityItem) {
         viewModelScope.launch {
             usersRepository.insertToCart(commodityItem.copy(quantity = commodityItem.quantity +1 ).toCartModel())
@@ -187,6 +144,9 @@ class CatalogProductScreenViewModel(
                 usersRepository.insertToCart(commodityItem.copy(quantity = commodityItem.quantity -1 ).toCartModel())
             }
         }
+    }
+    fun chooseCommodityItem(item: CommodityItem){
+        sharedViewModel.chooseCommodityItem(item.productItem.id)
     }
     fun onAttributeItemClick(attribute: AttributesItemModel, isChecked: Boolean){
         _catalogScreenUiState.update { currentState ->
@@ -243,6 +203,6 @@ class CatalogProductScreenViewModel(
     }
 }
 
-private fun CommodityItem.toCartModel(): CartModel {
+fun CommodityItem.toCartModel(): CartModel {
     return CartModel(productItem.id, productItem.name, productItem.priceCurrent, productItem.priceOld, image, quantity)
 }
