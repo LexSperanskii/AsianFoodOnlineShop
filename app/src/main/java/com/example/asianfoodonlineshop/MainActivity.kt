@@ -33,11 +33,11 @@ class MainActivity : ComponentActivity() {
             }
         }
     }
-    //не всегда работает поэтому удаляем при onCreate
-    override fun onDestroy() {
-        super.onDestroy()
-        lifecycleScope.launch(Dispatchers.IO) {
-            AppDataContainer(this@MainActivity).usersRepository.deleteAllCartItems()
-        }
-    }
+    //не всегда работает поэтому удаляем через onCreate
+//    override fun onDestroy() {
+//        super.onDestroy()
+//        lifecycleScope.launch(Dispatchers.IO) {
+//            AppDataContainer(this@MainActivity).usersRepository.deleteAllCartItems()
+//        }
+//    }
 }
