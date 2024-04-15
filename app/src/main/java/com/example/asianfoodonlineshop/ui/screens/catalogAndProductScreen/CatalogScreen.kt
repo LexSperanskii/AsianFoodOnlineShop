@@ -48,17 +48,22 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.dimensionResource
+import androidx.compose.ui.res.integerResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.Font
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.asianfoodonlineshop.R
 import com.example.asianfoodonlineshop.model.CommodityItem
 import com.example.asianfoodonlineshop.model.network.AttributesItemModel
 import com.example.asianfoodonlineshop.model.network.CategoriesItemModel
+import com.example.asianfoodonlineshop.ui.AppViewModelProvider
 import com.example.asianfoodonlineshop.ui.screens.TopAppBarMenuLogoSearch
 
 
@@ -66,11 +71,11 @@ import com.example.asianfoodonlineshop.ui.screens.TopAppBarMenuLogoSearch
 fun CatalogScreen(
     navigateToCartButton: () -> Unit,
     navigateToProduct: () -> Unit,
-    catalogProductScreenViewModel: CatalogProductScreenViewModel,
+    catalogScreenViewModel: CatalogScreenViewModel = viewModel(factory = AppViewModelProvider.Factory),
     modifier: Modifier = Modifier
 ) {
-    val catalogScreenUiState = catalogProductScreenViewModel.catalogScreenUiState.collectAsState().value
-    val catalogScreenNetworkUiState = catalogProductScreenViewModel.catalogScreenNetworkUiState
+    val catalogScreenUiState = catalogScreenViewModel.catalogScreenUiState.collectAsState().value
+    val catalogScreenNetworkUiState = catalogScreenViewModel.catalogScreenNetworkUiState
 
     var showBottomSheet by remember { mutableStateOf(false) }
 
@@ -81,7 +86,7 @@ fun CatalogScreen(
                     showBottomSheet = true
                 },
                 onCLickSearch = {},
-                tagsCount = catalogScreenUiState.listOfChosenAttributes.size.toString()
+                tagsCount = catalogScreenUiState.listOfChosenAttributes.size
             )
         },
         bottomBar = {
@@ -101,42 +106,42 @@ fun CatalogScreen(
             CategoryRow(
                 listOfCategories = catalogScreenUiState.listOfCategories,
                 currentCategory = catalogScreenUiState.currentCategory,
-                onCategoryClick = { catalogProductScreenViewModel.onCategoryClick(it) },
+                onCategoryClick = { catalogScreenViewModel.onCategoryClick(it) },
                 modifier = Modifier.fillMaxWidth()
             )
             when (catalogScreenNetworkUiState) {
                 is CatalogScreenNetworkUiState.Loading ->
-                    LoadingScreen(modifier = modifier.fillMaxSize())
+                    LoadingScreen(modifier = Modifier.fillMaxSize())
                 is CatalogScreenNetworkUiState.Success ->
                     CommodityItemsGridScreen(
                         productItems = catalogScreenUiState.listOfProducts,
                         onCardClick = {
-                            catalogProductScreenViewModel.chooseCommodityItem(it)
+                            catalogScreenViewModel.chooseCommodityItem(it)
                             navigateToProduct()
                         },
                         onAddToCartButtonClick = {
-                            catalogProductScreenViewModel.increaseQuantity(it)
+                            catalogScreenViewModel.increaseQuantity(it)
                         },
                         onIncreaseQuantityClick = {
-                            catalogProductScreenViewModel.increaseQuantity(it)
+                            catalogScreenViewModel.increaseQuantity(it)
                         },
                         onDecreaseQuantityClick = {
-                            catalogProductScreenViewModel.decreaseQuantity(it)
+                            catalogScreenViewModel.decreaseQuantity(it)
                         },
                         isShowBottomSheet = showBottomSheet,
                         onDismissRequestClick = { showBottomSheet = false },
                         listOfAttributes = catalogScreenUiState.listOfAttributes,
                         listOfChosenAttributes = catalogScreenUiState.listOfChosenAttributes,
                         onCheckedChangeClick = { attribute, isChecked ->
-                            catalogProductScreenViewModel.onAttributeItemClick(attribute, isChecked)
+                            catalogScreenViewModel.onAttributeItemClick(attribute, isChecked)
                         },
                         onButtonTagsClick = { showBottomSheet = false },
                         modifier = Modifier.fillMaxSize()
                     )
                 is CatalogScreenNetworkUiState.Error ->
                     ErrorScreen(
-                        retryAction = { catalogProductScreenViewModel.getCommodityItemsInfo() },
-                        modifier = modifier.fillMaxSize()
+                        retryAction = { catalogScreenViewModel.getCommodityItemsInfo() },
+                        modifier = Modifier.fillMaxSize()
                     )
             }
         }
@@ -176,7 +181,9 @@ fun LoadingScreen(modifier: Modifier = Modifier) {
 fun CommodityElement(
     commodityItem: CommodityItem,
     onCardClick: () -> Unit,
-    onSale: Boolean,
+    isOnSale: Boolean,
+    isVegan: Boolean,
+    isSpicy: Boolean,
     onAddToCartButtonClick: () -> Unit,
     onIncreaseQuantityClick: () -> Unit,
     onDecreaseQuantityClick: () -> Unit,
@@ -198,14 +205,37 @@ fun CommodityElement(
                     .height(dimensionResource(R.dimen.size_170))
             ) {
                 Box(modifier = Modifier.fillMaxSize()) {
-                    if (onSale){
-                        Image(
-                            painter = painterResource(id = R.drawable.ic_sale_tag),
-                            contentDescription = stringResource(R.string.reduced),
-                            modifier = Modifier
-                                .padding(dimensionResource(id = R.dimen.size_8))
-                                .size(dimensionResource(R.dimen.size_24))
-                        )
+                    Row(
+                        modifier = Modifier
+                            .padding(dimensionResource(id = R.dimen.size_8))
+                    ){
+                        if (isOnSale){
+                            Image(
+                                painter = painterResource(id = R.drawable.ic_sale_tag),
+                                contentDescription = stringResource(R.string.reduced),
+                                modifier = Modifier
+                                    .size(dimensionResource(R.dimen.size_24))
+                                    .padding(end = dimensionResource(id = R.dimen.size_2))
+                            )
+                        }
+                        if (isVegan){
+                            Image(
+                                painter = painterResource(id = R.drawable.ic_vegan),
+                                contentDescription = stringResource(R.string.reduced),
+                                modifier = Modifier
+                                    .size(dimensionResource(R.dimen.size_24))
+                                    .padding(end = dimensionResource(id = R.dimen.size_2))
+                            )
+                        }
+                        if (isSpicy){
+                            Image(
+                                painter = painterResource(id = R.drawable.ic_spicy),
+                                contentDescription = stringResource(R.string.reduced),
+                                modifier = Modifier
+                                    .size(dimensionResource(R.dimen.size_24))
+                                    .padding(end = dimensionResource(id = R.dimen.size_2))
+                            )
+                        }
                     }
                     Image(
                         painter = painterResource(id = commodityItem.image),
@@ -222,6 +252,8 @@ fun CommodityElement(
                 Text(
                     text = commodityItem.productItem.name,
                     style = TextStyle(
+                        fontWeight = FontWeight(integerResource(id = R.integer.weight_400)),
+                        fontFamily = FontFamily(Font(R.font.roboto_regular)),
                         fontSize = dimensionResource(id = R.dimen.text_size_14).value.sp,
                         color = colorResource(id = R.color.black),
                     ),
@@ -232,6 +264,8 @@ fun CommodityElement(
                 Text(
                     text = stringResource(id = R.string.measure, commodityItem.productItem.measure, commodityItem.productItem.measureUnit),
                     style = TextStyle(
+                        fontWeight = FontWeight(integerResource(id = R.integer.weight_400)),
+                        fontFamily = FontFamily(Font(R.font.roboto_regular)),
                         fontSize = dimensionResource(id = R.dimen.text_size_14).value.sp,
                         color = colorResource(id = R.color.dark_gray),
                     )
@@ -271,7 +305,7 @@ fun CommodityItemsGridScreen(
     ) {
     if (productItems.isEmpty()){
         Box(
-            modifier = modifier
+            modifier = Modifier
                 .fillMaxSize()
         ) {
             Text(
@@ -289,7 +323,9 @@ fun CommodityItemsGridScreen(
                 CommodityElement(
                     commodityItem = item,
                     onCardClick = { onCardClick(item) },
-                    onSale = item.productItem.priceOld != null,
+                    isOnSale = item.productItem.priceOld != null,
+                    isVegan = item.productItem.tagIds.contains(integerResource(id = R.integer.tag_2)),
+                    isSpicy = item.productItem.tagIds.contains(integerResource(id = R.integer.tag_4)),
                     onAddToCartButtonClick = {onAddToCartButtonClick(item)},
                     onIncreaseQuantityClick = {onIncreaseQuantityClick(item)},
                     onDecreaseQuantityClick = {onDecreaseQuantityClick(item)}
@@ -333,6 +369,8 @@ fun CategoryRow(
                     Text(
                         text = category.name,
                         style = TextStyle(
+                            fontWeight = FontWeight(integerResource(id = R.integer.weight_500)),
+                            fontFamily = FontFamily(Font(R.font.roboto_medium)),
                             fontSize = dimensionResource(id = R.dimen.text_size_16).value.sp,
                             color = colorResource(id = R.color.white),
                         )
@@ -349,6 +387,8 @@ fun CategoryRow(
                     Text(
                         text = category.name,
                         style = TextStyle(
+                            fontWeight = FontWeight(integerResource(id = R.integer.weight_500)),
+                            fontFamily = FontFamily(Font(R.font.roboto_medium)),
                             fontSize = dimensionResource(id = R.dimen.text_size_16).value.sp,
                             color = colorResource(id = R.color.black),
                         )
@@ -472,7 +512,8 @@ fun PriceButtonDefault(
                 Text(
                     text = stringResource(R.string.price, priceFormat(commodityItem.productItem.priceCurrent)),
                     style = TextStyle(
-                        fontWeight = FontWeight.Bold,
+                        fontWeight = FontWeight(integerResource(id = R.integer.weight_500)),
+                        fontFamily = FontFamily(Font(R.font.roboto_medium)),
                         fontSize = dimensionResource(id = R.dimen.text_size_16).value.sp,
                         color = colorResource(id = R.color.black),
                     )
@@ -482,7 +523,8 @@ fun PriceButtonDefault(
                 Text(
                     text = stringResource(R.string.price, priceFormat(commodityItem.productItem.priceCurrent)),
                     style = TextStyle(
-                        fontWeight = FontWeight.Bold,
+                        fontWeight = FontWeight(integerResource(id = R.integer.weight_500)),
+                        fontFamily = FontFamily(Font(R.font.roboto_medium)),
                         fontSize = dimensionResource(id = R.dimen.text_size_16).value.sp,
                         color = colorResource(id = R.color.black),
                     ),
@@ -491,6 +533,8 @@ fun PriceButtonDefault(
                 Text(
                     text = stringResource(R.string.price, priceFormat(commodityItem.productItem.priceOld)),
                     style = TextStyle(
+                        fontWeight = FontWeight(integerResource(id = R.integer.weight_400)),
+                        fontFamily = FontFamily(Font(R.font.roboto_regular)),
                         fontSize = dimensionResource(id = R.dimen.text_size_14).value.sp,
                         color = colorResource(id = R.color.dark_gray),
                         textDecoration = TextDecoration.LineThrough
@@ -530,7 +574,8 @@ fun PriceButtonForQuantity(
         Text(
             text = commodityItem.quantity.toString(),
             style = TextStyle(
-                fontWeight = FontWeight.Bold,
+                fontWeight = FontWeight(integerResource(id = R.integer.weight_500)),
+                fontFamily = FontFamily(Font(R.font.roboto_medium)),
                 fontSize = dimensionResource(id = R.dimen.text_size_16).value.sp,
                 color = colorResource(id = R.color.black),
             )
@@ -583,6 +628,8 @@ fun NavigateToCartButton(
                 Text(
                     text = stringResource(R.string.price, price),
                     style = TextStyle(
+                        fontWeight = FontWeight(integerResource(id = R.integer.weight_500)),
+                        fontFamily = FontFamily(Font(R.font.roboto_regular)),
                         fontSize = dimensionResource(id = R.dimen.text_size_16).value.sp,
                         color = colorResource(id = R.color.white),
                     ),

@@ -19,7 +19,7 @@ class OfflineUsersRepository(private val userDao: UserDao) : UsersRepository {
         }
     }
 
-    override suspend fun getItem(id: Int): CartEntity? = userDao.getItem(id)
+    override suspend fun getItem(id: Int): CartModel? = userDao.getItem(id)?.toCartModel()
 
     override suspend fun deleteAllCartItems() = userDao.deleteAllCartItems()
 

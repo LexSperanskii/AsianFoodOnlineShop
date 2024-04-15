@@ -6,6 +6,7 @@ import com.example.asianfoodonlineshop.data.db.UsersRepository
 import com.example.asianfoodonlineshop.data.network.ProductsRepository
 import com.example.asianfoodonlineshop.model.CommodityItem
 import com.example.asianfoodonlineshop.model.db.CartModel
+import com.example.asianfoodonlineshop.ui.screens.SharedViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -18,7 +19,8 @@ data class CartScreenUiState(
     val price: Int = 0
 )
 class CartScreenViewModel(
-    private val usersRepository: UsersRepository
+    private val usersRepository: UsersRepository,
+    private val sharedViewModel: SharedViewModel // Передача общего значения для id
 ) : ViewModel() {
 
     private val _cartScreenUiState = MutableStateFlow(CartScreenUiState())
@@ -47,5 +49,15 @@ class CartScreenViewModel(
                 usersRepository.insertToCart(item.copy(quantity = item.quantity -1 ))
             }
         }
+    }
+
+    fun deleteAllCartItems() {
+        viewModelScope.launch {
+            usersRepository.deleteAllCartItems()
+        }
+    }
+
+    fun chooseCommodityItem(item: CartModel){
+        sharedViewModel.chooseCommodityItem(item.id)
     }
 }

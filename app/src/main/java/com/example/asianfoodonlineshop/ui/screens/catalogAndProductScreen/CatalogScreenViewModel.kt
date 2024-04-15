@@ -13,11 +13,11 @@ import com.example.asianfoodonlineshop.model.db.CartModel
 import com.example.asianfoodonlineshop.model.network.AttributesItemModel
 import com.example.asianfoodonlineshop.model.network.CategoriesItemModel
 import com.example.asianfoodonlineshop.model.network.ProductModel
+import com.example.asianfoodonlineshop.model.toCartModel
 import com.example.asianfoodonlineshop.ui.screens.SharedViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
@@ -41,7 +41,7 @@ data class CatalogScreenUiState(
 )
 
 
-class CatalogProductScreenViewModel(
+class CatalogScreenViewModel(
     private val usersRepository: UsersRepository,
     private val productsRepository: ProductsRepository,
     private val sharedViewModel: SharedViewModel // Передача общего значения для id
@@ -201,8 +201,4 @@ class CatalogProductScreenViewModel(
             )
         }
     }
-}
-
-fun CommodityItem.toCartModel(): CartModel {
-    return CartModel(productItem.id, productItem.name, productItem.priceCurrent, productItem.priceOld, image, quantity)
 }

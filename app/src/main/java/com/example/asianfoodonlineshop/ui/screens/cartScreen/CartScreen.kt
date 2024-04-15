@@ -1,6 +1,5 @@
 package com.example.asianfoodonlineshop.ui.screens.cartScreen
 
-import android.content.Context
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -20,6 +19,7 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
@@ -42,6 +42,7 @@ import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.asianfoodonlineshop.R
@@ -54,8 +55,8 @@ import kotlinx.coroutines.launch
 @Composable
 fun CartScreen(
     currentDestinationTitle: Int,
-    onClickNavigateBack: () -> Unit,
     navigateToProduct: () -> Unit,
+    navigateToCatalog: () -> Unit,
     cartScreenViewModel: CartScreenViewModel = viewModel(factory = AppViewModelProvider.Factory)
 ) {
     val cartUiState = cartScreenViewModel.cartScreenUiState.collectAsState().value
@@ -71,18 +72,24 @@ fun CartScreen(
         topBar = {
             TopAppBarBackAndName(
                 currentDestinationTitle = currentDestinationTitle,
-                onClickNavigateBack = onClickNavigateBack,
+                onClickNavigateBack = navigateToCatalog,
             )
         },
         bottomBar = {
-            PlaceOrderButton(
-                price = cartUiState.price,
-                navigateToPlaceOrder = {
-                    scope.launch {
-                        snackbarHostState.showSnackbar(context.getString(R.string.send_order))
+            if (cartUiState.cart.isNotEmpty())
+                PlaceOrderButton(
+                    price = cartUiState.price,
+                    navigateToPlaceOrder = {
+                        scope.launch {
+                            snackbarHostState.showSnackbar(
+                                context.getString(R.string.send_order),
+                                duration = SnackbarDuration.Short
+                            )
+                            navigateToCatalog()
+                        }
+                        cartScreenViewModel.deleteAllCartItems()
                     }
-                }
-            )
+                )
         }
     ) { innerPadding ->
         Column(
@@ -99,11 +106,20 @@ fun CartScreen(
                     )
                 }
             }else{
+                Spacer(
+                    modifier = Modifier
+                        .fillMaxWidth() // Растянуть по ширине
+                        .height(4.dp) // Увеличить высоту для лучшей видимости тени
+                        .background(colorResource(id = R.color.gray)) // Полупрозрачный серый фон
+                )
                 CartScreenBody(
                     cartItems = cartUiState.cart,
                     onIncreaseQuantityClick = {cartScreenViewModel.increaseQuantity(it)},
                     onDecreaseQuantityClick = {cartScreenViewModel.decreaseQuantity(it)},
-                    navigateToProduct = navigateToProduct
+                    navigateToProduct = {
+                        cartScreenViewModel.chooseCommodityItem(it)
+                        navigateToProduct()
+                    }
                 )
             }
         }
@@ -115,7 +131,7 @@ fun CartScreenBody(
     cartItems : List<CartModel>,
     onIncreaseQuantityClick: (CartModel) -> Unit,
     onDecreaseQuantityClick: (CartModel) -> Unit,
-    navigateToProduct: () -> Unit,
+    navigateToProduct: (CartModel) -> Unit,
     modifier : Modifier = Modifier
 ){
     LazyColumn(
@@ -127,7 +143,7 @@ fun CartScreenBody(
                 cartElement = cartItem,
                 onIncreaseQuantityClick = {onIncreaseQuantityClick(cartItem)},
                 onDecreaseQuantityClick = {onDecreaseQuantityClick(cartItem)},
-                navigateToProduct = navigateToProduct
+                navigateToProduct = {navigateToProduct(cartItem)}
             )
         }
     }
@@ -306,6 +322,8 @@ fun PlaceOrderButton(
             Text(
                 text = stringResource(R.string.place_order, priceFormat(price)),
                 style = TextStyle(
+                    fontWeight = FontWeight(integerResource(id = R.integer.weight_500)),
+                    fontFamily = FontFamily(Font(R.font.roboto_regular)),
                     fontSize = dimensionResource(id = R.dimen.text_size_16).value.sp,
                     color = colorResource(id = R.color.white),
                 )

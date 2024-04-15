@@ -32,4 +32,5 @@
     <string name="cart_stub">Пусто, выберите блюда в каталоге :)</string>
     <string name="catalog_stub">Ууупс, ничего не подходит под выбранные критерии :)</string>
     <string name="send_order">Вы молодец! Ваш заказ был отправлен :)</string>
+    <string name="image_download">Что то пошло не так :(</string>
 </resources>

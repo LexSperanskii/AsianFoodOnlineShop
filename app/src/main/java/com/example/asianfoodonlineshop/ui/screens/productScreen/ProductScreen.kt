@@ -1,4 +1,4 @@
-package com.example.asianfoodonlineshop.ui.screens.catalogAndProductScreen
+package com.example.asianfoodonlineshop.ui.screens.productScreen
 
 
 import androidx.compose.foundation.Image
@@ -31,21 +31,32 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.dimensionResource
+import androidx.compose.ui.res.integerResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.Font
+import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.asianfoodonlineshop.R
 import com.example.asianfoodonlineshop.model.CommodityItem
+import com.example.asianfoodonlineshop.ui.AppViewModelProvider
+import com.example.asianfoodonlineshop.ui.screens.catalogAndProductScreen.ErrorScreen
+import com.example.asianfoodonlineshop.ui.screens.catalogAndProductScreen.LoadingScreen
+import com.example.asianfoodonlineshop.ui.screens.catalogAndProductScreen.priceFormat
 
 @Composable
 fun ProductScreen(
-    catalogProductScreenViewModel: CatalogProductScreenViewModel,
     navigateToCartButton: () -> Unit,
     navigateToCatalogButton: () -> Unit,
     modifier: Modifier = Modifier,
+    productScreenViewModel: ProductScreenViewModel = viewModel(factory = AppViewModelProvider.Factory),
 ) {
-    val productScreenUiState = catalogProductScreenViewModel.productScreenUiState.collectAsState().value
+
+    val productScreenUiState = productScreenViewModel.productScreenUiState.collectAsState().value
+    val productScreenNetworkUiState = productScreenViewModel.productScreenNetworkUiState
 
     Scaffold(
         topBar = {},
@@ -53,7 +64,11 @@ fun ProductScreen(
             AddToCartProductScreenButton(
                 quantity = productScreenUiState.commodityItem.quantity,
                 price = priceFormat(productScreenUiState.commodityItem.productItem.priceCurrent),
-                addToCartButton = {catalogProductScreenViewModel.addToCartFromProductScreen(productScreenUiState.commodityItem)},
+                addToCartButton = {
+                    productScreenViewModel.addToCartFromProductScreen(
+                        productScreenUiState.commodityItem
+                    )
+                },
                 navigateToCartButton = navigateToCartButton
             )
         }
@@ -63,10 +78,22 @@ fun ProductScreen(
                 .fillMaxSize()
                 .padding(innerPadding)
         ) {
-            ProductScreenBody(
-                commodityItem = productScreenUiState.commodityItem,
-                navigateToCatalogButton = navigateToCatalogButton
-            )
+            when (productScreenNetworkUiState) {
+                is ProductScreenNetworkUiState.Loading ->
+                    LoadingScreen(modifier = Modifier.fillMaxSize())
+
+                is ProductScreenNetworkUiState.Success ->
+                    ProductScreenBody(
+                        commodityItem = productScreenUiState.commodityItem,
+                        navigateToCatalogButton = navigateToCatalogButton
+                    )
+
+                is ProductScreenNetworkUiState.Error ->
+                    ErrorScreen(
+                        retryAction = { productScreenViewModel.getCommodityItem() },
+                        modifier = Modifier.fillMaxSize()
+                    )
+            }
         }
     }
 }
@@ -80,6 +107,7 @@ fun ProductScreenBody(
     Column(
         modifier = modifier
             .fillMaxSize()
+            .verticalScroll(enabled = true, state = rememberScrollState())
     ) {
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
@@ -111,11 +139,12 @@ fun ProductScreenBody(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .verticalScroll(enabled = true, state = rememberScrollState())
         ) {
             Text(
                 text = commodityItem.productItem.name,
                 style = TextStyle(
+                    fontWeight = FontWeight(integerResource(id = R.integer.weight_400)),
+                    fontFamily = FontFamily(Font(R.font.roboto_medium)),
                     fontSize = dimensionResource(id = R.dimen.text_size_34).value.sp,
                     color = colorResource(id = R.color.black),
                 ),
@@ -129,6 +158,8 @@ fun ProductScreenBody(
             Text(
                 text = commodityItem.productItem.description,
                 style = TextStyle(
+                    fontWeight = FontWeight(integerResource(id = R.integer.weight_400)),
+                    fontFamily = FontFamily(Font(R.font.roboto_regular)),
                     fontSize = dimensionResource(id = R.dimen.text_size_16).value.sp,
                     color = colorResource(id = R.color.dark_gray),
                 ),
@@ -195,6 +226,8 @@ fun CompoundInfo(
                 Text(
                     text = title,
                     style = TextStyle(
+                        fontWeight = FontWeight(integerResource(id = R.integer.weight_400)),
+                        fontFamily = FontFamily(Font(R.font.roboto_regular)),
                         fontSize = dimensionResource(id = R.dimen.text_size_16).value.sp,
                         color = colorResource(id = R.color.dark_gray),
                     )
@@ -203,6 +236,8 @@ fun CompoundInfo(
                 Text(
                     text = description,
                     style = TextStyle(
+                        fontWeight = FontWeight(integerResource(id = R.integer.weight_400)),
+                        fontFamily = FontFamily(Font(R.font.roboto_medium)),
                         fontSize = dimensionResource(id = R.dimen.text_size_16).value.sp,
                         color = colorResource(id = R.color.black),
                     )
@@ -237,10 +272,11 @@ fun AddToCartProductScreenButton(
                 Text(
                     text = stringResource(R.string.add_to_cart_for, price),
                     style = TextStyle(
+                        fontWeight = FontWeight(integerResource(id = R.integer.weight_500)),
+                        fontFamily = FontFamily(Font(R.font.roboto_regular)),
                         fontSize = dimensionResource(id = R.dimen.text_size_16).value.sp,
                         color = colorResource(id = R.color.white),
-                    ),
-                    modifier = Modifier
+                    )
                 )
             }
         }else{
@@ -256,10 +292,11 @@ fun AddToCartProductScreenButton(
                 Text(
                     text = stringResource(R.string.navigate_to_cart_from_product, price),
                     style = TextStyle(
+                        fontWeight = FontWeight(integerResource(id = R.integer.weight_500)),
+                        fontFamily = FontFamily(Font(R.font.roboto_regular)),
                         fontSize = dimensionResource(id = R.dimen.text_size_16).value.sp,
                         color = colorResource(id = R.color.white),
-                    ),
-                    modifier = Modifier
+                    )
                 )
             }
         }

@@ -7,7 +7,8 @@ import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.example.asianfoodonlineshop.AsianFoodOnlineShopApplication
 import com.example.asianfoodonlineshop.ui.screens.cartScreen.CartScreenViewModel
-import com.example.asianfoodonlineshop.ui.screens.catalogAndProductScreen.CatalogProductScreenViewModel
+import com.example.asianfoodonlineshop.ui.screens.catalogAndProductScreen.CatalogScreenViewModel
+import com.example.asianfoodonlineshop.ui.screens.productScreen.ProductScreenViewModel
 
 
 /**
@@ -16,14 +17,23 @@ import com.example.asianfoodonlineshop.ui.screens.catalogAndProductScreen.Catalo
 object AppViewModelProvider {
     val Factory = viewModelFactory {
         initializer {
-            CatalogProductScreenViewModel(
+            CatalogScreenViewModel(
                 usersRepository = onlineShopApplication().container.usersRepository,
-                productsRepository = onlineShopApplication().container.productsInfoRepository
+                productsRepository = onlineShopApplication().container.productsInfoRepository,
+                sharedViewModel = onlineShopApplication().container.sharedViewModel
             )
         }
         initializer {
             CartScreenViewModel(
-                usersRepository = onlineShopApplication().container.usersRepository
+                usersRepository = onlineShopApplication().container.usersRepository,
+                sharedViewModel = onlineShopApplication().container.sharedViewModel
+            )
+        }
+        initializer {
+            ProductScreenViewModel(
+                usersRepository = onlineShopApplication().container.usersRepository,
+                productsRepository = onlineShopApplication().container.productsInfoRepository,
+                sharedViewModel = onlineShopApplication().container.sharedViewModel
             )
         }
     }

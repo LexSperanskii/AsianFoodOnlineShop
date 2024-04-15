@@ -1,5 +1,6 @@
 package com.example.asianfoodonlineshop.model
 
+import com.example.asianfoodonlineshop.model.db.CartModel
 import com.example.asianfoodonlineshop.model.network.ProductModel
 
 /**
@@ -10,3 +11,8 @@ data class CommodityItem(
     val image: Int,
     val quantity: Int,
 )
+
+
+fun CommodityItem.toCartModel(): CartModel {
+    return CartModel(productItem.id, productItem.name, productItem.priceCurrent, productItem.priceOld, image, quantity)
+}

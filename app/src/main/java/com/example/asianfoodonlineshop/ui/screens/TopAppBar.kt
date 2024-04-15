@@ -19,9 +19,12 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.dimensionResource
+import androidx.compose.ui.res.integerResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.Font
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
 import com.example.asianfoodonlineshop.R
@@ -31,18 +34,19 @@ import com.example.asianfoodonlineshop.R
 fun TopAppBarMenuLogoSearch(
     onClickMenu: () -> Unit,
     onCLickSearch: () -> Unit,
-    tagsCount: String,
+    tagsCount: Int,
     modifier: Modifier = Modifier,
 ) {
     TopAppBar(
         navigationIcon = {
             BadgedBox(
                 badge = {
-                    Badge {
-                        Text(
-                            text = tagsCount
-                        )
-                    }
+                    if (tagsCount != 0)
+                        Badge {
+                            Text(
+                                text = tagsCount.toString()
+                            )
+                        }
                 }) {
                 IconButton(onClick = onClickMenu) {
                     Icon(
@@ -94,7 +98,8 @@ fun TopAppBarBackAndName(
                 Text(
                     text = stringResource(id = currentDestinationTitle),
                     style = TextStyle(
-                        fontWeight = FontWeight.Bold,
+                        fontWeight = FontWeight(integerResource(id = R.integer.weight_600)),
+                        fontFamily = FontFamily(Font(R.font.roboto_bold)),
                         fontSize = dimensionResource(id = R.dimen.text_size_18).value.sp,
                         color = colorResource(id = R.color.black),
                     ),
