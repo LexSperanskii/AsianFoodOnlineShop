@@ -1,3 +1,4 @@
+The project was made according to technical specifications. Some decisions are subject to change.
 It remains to add a search function. 
 Make a SplashScreen in the form of a short video.
 
