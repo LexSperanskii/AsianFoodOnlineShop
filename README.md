@@ -1,6 +1,5 @@
-The project was made according to technical specifications. Some decisions are subject to change.
-It remains to add a search function. 
-Make a SplashScreen in the form of a short video.
+The project was made according to technical specification. Some decisions are subject for discussion.
+It remains to add a search function + make a SplashScreen in the form of a short video which in row folder.
 
 
 ![image_2024-04-15_02-56-13](https://github.com/LexSperanskii/AsianFoodOnlineShop/assets/81870716/d6f7051d-114d-44fb-bec3-0a3778e9a4d5)
