@@ -58,12 +58,10 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.asianfoodonlineshop.R
 import com.example.asianfoodonlineshop.model.CommodityItem
 import com.example.asianfoodonlineshop.model.network.AttributesItemModel
 import com.example.asianfoodonlineshop.model.network.CategoriesItemModel
-import com.example.asianfoodonlineshop.ui.AppViewModelProvider
 import com.example.asianfoodonlineshop.ui.screens.TopAppBarMenuLogoSearch
 
 
@@ -71,7 +69,8 @@ import com.example.asianfoodonlineshop.ui.screens.TopAppBarMenuLogoSearch
 fun CatalogScreen(
     navigateToCartButton: () -> Unit,
     navigateToProduct: () -> Unit,
-    catalogScreenViewModel: CatalogScreenViewModel = viewModel(factory = AppViewModelProvider.Factory),
+    navigateToSearch: () -> Unit,
+    catalogScreenViewModel: CatalogScreenViewModel,
     modifier: Modifier = Modifier
 ) {
     val catalogScreenUiState = catalogScreenViewModel.catalogScreenUiState.collectAsState().value
@@ -85,7 +84,7 @@ fun CatalogScreen(
                 onClickMenu = {
                     showBottomSheet = true
                 },
-                onCLickSearch = {},
+                onCLickSearch = { navigateToSearch() },
                 tagsCount = catalogScreenUiState.listOfChosenAttributes.size
             )
         },

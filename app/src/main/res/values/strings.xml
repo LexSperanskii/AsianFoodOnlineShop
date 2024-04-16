@@ -32,4 +32,7 @@
     <string name="catalog_stub">Whoops, nothing fits :)</string>
     <string name="send_order">Well done! Your order has been sent :)</string>
     <string name="image_download">Something went wring :(</string>
+    <string name="search_field_stub">Enter the name of the dish</string>
+    <string name="clear">Clear</string>
+    <string name="back_to_catalog">Back to Catalog</string>
 </resources>

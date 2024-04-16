@@ -20,3 +20,8 @@ object CartDestination : NavigationDestination {
     override val title = R.string.cart
 }
 
+object SearchDestination : NavigationDestination {
+    override val route = "search"
+    override val title = R.string.search
+}
+

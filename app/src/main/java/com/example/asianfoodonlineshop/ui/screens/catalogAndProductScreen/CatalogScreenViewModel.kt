@@ -3,13 +3,13 @@ package com.example.asianfoodonlineshop.ui.screens.catalogAndProductScreen
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.asianfoodonlineshop.R
 import com.example.asianfoodonlineshop.data.db.UsersRepository
 import com.example.asianfoodonlineshop.data.network.ProductsRepository
 import com.example.asianfoodonlineshop.model.CommodityItem
-import com.example.asianfoodonlineshop.model.db.CartModel
 import com.example.asianfoodonlineshop.model.network.AttributesItemModel
 import com.example.asianfoodonlineshop.model.network.CategoriesItemModel
 import com.example.asianfoodonlineshop.model.network.ProductModel
@@ -18,6 +18,7 @@ import com.example.asianfoodonlineshop.ui.screens.SharedViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
@@ -40,12 +41,19 @@ data class CatalogScreenUiState(
     val price: Int = 0
 )
 
+data class SearchUiState(
+    val searchField : TextFieldValue = TextFieldValue(),
+    val listOfSuitableProducts: List<CommodityItem> = listOf()
+)
 
 class CatalogScreenViewModel(
     private val usersRepository: UsersRepository,
     private val productsRepository: ProductsRepository,
     private val sharedViewModel: SharedViewModel // Передача общего значения для id
 ) : ViewModel() {
+
+    private val _searchUiState = MutableStateFlow(SearchUiState())
+    var searchUiState :StateFlow<SearchUiState> = _searchUiState.asStateFlow()
 
     /**
      * State для состояния Сети
@@ -198,6 +206,23 @@ class CatalogScreenViewModel(
                         productItem.productItem.tagIds.contains(attributeItem.id)
                     }
                 }
+            )
+        }
+    }
+
+    fun updateSearchField(search: TextFieldValue) {
+        _searchUiState.update {
+            it.copy(
+                searchField = search,
+            )
+        }
+        filterSearchList(search.text)
+    }
+    private fun filterSearchList(search: String){
+        val currentState = catalogScreenUiState.value
+        _searchUiState.update { it ->
+            it.copy(
+                listOfSuitableProducts = if (search == "") listOf() else currentState.listOfProductsOriginal.filter { it.productItem.name.contains(search, ignoreCase = true) }
             )
         }
     }
