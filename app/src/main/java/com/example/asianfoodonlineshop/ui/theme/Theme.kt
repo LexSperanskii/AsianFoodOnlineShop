@@ -92,7 +92,7 @@ private val darkColorScheme = darkColorScheme(
 
 @Composable
 fun AsianFoodOnlineShopTheme(
-    darkTheme: Boolean = isSystemInDarkTheme(),
+    darkTheme: Boolean = false,//isSystemInDarkTheme(),
     // Dynamic color is available on Android 12+
     dynamicColor: Boolean = false,
     content: @Composable () -> Unit
